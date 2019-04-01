@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--This launch file is used to launch the runway for testing the controller -->
+<launch>
+  <arg name="camera_value" default="0"/>
+  <arg name="use_vision" default="False"/>
+
+  <include file="$(find infrasim2)/launch/dbw_mkz_gazebo.launch" >
+    <arg name="use_camera_control" value="true" />
+    <!--arg name="camera_value" value="$(arg camera_value)"/-->
+    <arg name="world_name" value="$(find infrasim2)/worlds/controller_test_track_infrasim.world" />
+    <!--arg name="world_name" value="$(find infrasim2)/worlds/test_track.world" /-->    
+    <!--arg name="urdf_file" default="$(find infrasim2)/urdf/mkz.urdf.xacro" /-->
+    <arg name="urdf_file" default="$(find infrasim2)/urdf/mkz_test.urdf.xacro" />
+    <arg name="headless" default="false" />
+    <arg name="pause" default="false" />
+    <arg name="sim_param_file" value="$(find infrasim2)/yaml/controller_single_vehicle_test_track_infrasim.yaml" />
+  </include>
+
+  <!--
+  <include file="$(find dbw_mkz_vision_sim)/launch/lane_detection.launch" if="$(arg use_vision)" />
+
+  <node ns="vehicle" pkg="dbw_mkz_vision_sim" type="path_following_node" name="path_following" if="$(arg use_vision)" />	-->
+  
+  <include file="$(find dbw_mkz_can)/launch/dbw.launch" >
+    <arg name="live" value="false" />
+    <arg name="load_urdf" value="false" />
+    <arg name="can_ns" value="can_bus_dbw" />
+    <arg name="ulc" value="false" />
+  </include>
+
+  <node ns="vehicle" pkg="dbw_mkz_twist_controller" type="twist_controller" name="twist_control" />
+
+
+ <!--node name="visualizer_node" pkg="rviz" type="rviz" output="screen" >
+	<param name="robot_description" value="vehicle/robot_description"/>
+ </node -->
+
+ <!--node name="static_transform_node_2" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 vehicle/base_link my_frame_current"/ -->
+
+</launch>
