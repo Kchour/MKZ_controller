@@ -15,15 +15,19 @@
 
 # Topics
 ## Relevant Topics Published
- /vehicle/twist
+* /vehicle/twist
+* /vehicle/throttle_report
+* /vehicle/steering_report
+* /vehicle/brake_report
 
 ## Relevant Topics Subscribed
 * /vehicle/cmd_vel
-* /vehicle/throttleCmd
-* /vehicle/steeringCmd
-* /vehicle/brakeCmd
-1. For more info, see dbw_mkz_ros dataspeed inc. repository README.pdf
-1. Note (use either /vehicle/cmd_vel OR the 3 actuators directly...not both at the same time!)
+* /vehicle/throttle_cmd
+* /vehicle/steering_cmd
+* /vehicle/brake_cmd
+1. For more info, see dbw_mkz_ros dataspeed inc. repository: https://bitbucket.org/DataspeedInc/dbw_mkz_ros/src README.pdf
+1. For message api, see http://docs.ros.org/melodic/api/dbw_mkz_msgs/html/index-msg.html
+1. Note: use either /vehicle/cmd_vel OR the 3 actuators directly...not both at the same time!
 
 
 
