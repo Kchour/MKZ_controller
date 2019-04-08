@@ -102,4 +102,20 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#misc
 *.swp
+*.swo
+*.pyc
+*~
+*.user
+.DS_Store
+.cproject
+.project
+.settings
+*/devel/*
+*/build/*
+*/logs/*
+*/.catkin_tools/*
+*.bag
+*.weights
