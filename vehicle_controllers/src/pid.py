@@ -32,14 +32,19 @@ class PID:
     def satValues(self,value,satLower, satUpper):
         if value >= satUpper:
             return satUpper
-        elif value <= satLow:
+        elif value <= satLower:
             return satLower
         else:
             return value
 
-    def compute_control(self):
-        u = self.kp*self.errorNow + self.ki*self.errorTot + kd * (self.errorNow - self.errorPrev)
-
+    def computeControl(self):
+        #### Bound total error
+        kp = self.kp
+        ki = self.ki
+        kd = self.kd
+        self.errorTot = self.satValues(self.errorTot,self.satLower,self.satUpper) 
+        #### Compute control input
+        u = kp*self.errorNow + ki*self.errorTot + kd*(self.errorNow - self.errorPrev)
         return u
 
 

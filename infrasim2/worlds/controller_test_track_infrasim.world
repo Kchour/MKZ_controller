@@ -68,7 +68,7 @@
     <atmosphere type='adiabatic'/>
     <physics name='default_physics' default='0' type='ode'>
       <solver>
-	<type>world<type/>
+	<type>world</type>
       </solver>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1</real_time_factor>
