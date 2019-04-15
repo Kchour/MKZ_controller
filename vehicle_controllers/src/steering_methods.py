@@ -13,7 +13,7 @@ import numpy as np
 #    USE ESTIMATOR TO GET VEHICLE ODOM FIRST
 
 class SteeringMethods:
-    def __init__(self,filename='default'):
+    def __init__(self,filename='default',lookAhead=10.0,wheelBase = 2.85,steeringRatio = 14.8):
 	#### TODO: RAISE ERROR IF filename is default
         #### Callback Flags, length = number of callbacks 
         self.flag = 0
@@ -36,11 +36,12 @@ class SteeringMethods:
 
     #### CALLBACK FUNCTIONS
     def odom_cb(self,msg):
-	self.pose.x = msg.pose.pose.position.x
-	self.pose.y = msg.pose.pose.position.y
+	self.pose_x = msg.pose.pose.position.x
+	self.pose_y = msg.pose.pose.position.y
 	#self.pose.x = msg.pose.pose.position.z
-	q = msg.pose.pose.orientation
-	euler = tf.transformations.euler_from_quaternion(q)
+	quat = msg.pos
+	pdb.set_trace()
+	euler = tf.transformations.euler_from_quaternion(quat)
 	self.roll = euler[0]
 	self.pitch = euler[1]
 	self.yaw = euler[2]
@@ -59,17 +60,23 @@ class SteeringMethods:
         else:
             return value
 
-    def readText(self,filename = 'rtk_waypoints.dat'):
+    def readText(self,filename = 'circlefixed_example.dat'):
 	txt =np.loadtxt(filename,delimiter=',')
 	return txt
 
-    def angleDiff(value,angle):
+    def angleDiff(self,value,angle):
 	#### SEE IMPLEMENTATION: https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
 	return np.fmod((angle+np.pi),2*np.pi)-np.pi
 
+    def setValues(self,lookAhead, wheelBase, steeringRatio):
+	self.LA = lookAhead
+	self.WB = wheelBase
+	self.SR = steeringRatio
+
     #------------------------------
     #### Path Following Algorithms   
-    def methodPurePursuit(self,LA=10.0,wheelBase = 2.85,steeringRatio = 14.8):
+    def methodPurePursuit(self):
+ 	wheelBase = self.WB	
 	if self.flag==1:
 		#### Find closest waypoint 
 		diff = self.pathArray - np.array[self.pose.x,self.pose.y]
@@ -92,16 +99,16 @@ class SteeringMethods:
 		targetX = self.pathArray[self.targetPoint][0]
 		targetY = self.pathArray[self.targetPoint][1]
 		#### See terminology: https://aviation.stackexchange.com/questions/8000/what-are-the-differences-between-bearing-vs-course-vs-direction-vs-heading-vs-tr#8947
-		eastingBearing = np.atan2(targetY - self.pose.y, targetX - self.pose.x)
+		absoluteBearing = np.atan2(targetY - self.pose.y, targetX - self.pose.x)
 		relativeBearing = self.angleDiff(eastingBearing,self.yaw)			#Heading Error basically
 	
 		#### Compute desired curvature
 		curv = 2*np.sin(relativeBearing)/distList[targetPoint]
 	
 		#### Compute steering command (ackermann geometry)
-		steercmd = SteeringRatio*np.atan2(WheelBase*curv,1)
+		steercmd = SteeringRatio*np.atan2(wheelBase*curv,1)
 	
-		return steercmd, curv, eastingBearing,relativeBearing, targetPoint
+		return steercmd, curv, absoluteBearing,relativeBearing, targetPoint
 
 	   
 if __name__=="__main__":
