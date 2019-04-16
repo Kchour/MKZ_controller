@@ -1,14 +1,38 @@
 #!/usr/bin/env python
 
 import rospy 
+import tf
+import pdb
 
 class RosCallbackDefine:
 	def __init__(self,vehicle):
-		if vehicle = "MKZ":
+		self.vehicle = vehicle
+		self.vehList = ["MKZ","POLARIS"]
+	
+		if vehicle == self.vehList[0]:
 			self.init_mkz()
-			self.flag = [0,0,0]	#3 callback functions for now	
-		elif vehicle = "POLARIS":
+			self.flag = [0,0]	#3 callback functions for now	
+		elif vehicle == self.vehList[1]:
 			self.init_polaris()
+
+	#### PLATFORM AGNOSTIC FUNCTIONS
+	def return_states(self):
+		if self.vehicle == self.vehList[0]:
+			return self.__return_mkz()
+		elif self.vehicle == self.vehList[1]:
+			return self.__return_polaris()
+
+	def publish_vehicle_long(self,throttle,brake):
+		if self.vehicle == self.vehList[0]:
+			self.__publish_mkz_long(throttle,brake)
+		elif self.vehicle == self.vehList[1]:
+			self.__publish_polaris_long(throttle,brake)
+
+	def publish_vehicle_lat(self,steering):
+		if self.vehicle == self.vehList[0]:
+			self.__publish_mkz_lat(steering)
+		elif self.vehicle == self.vehList[1]:
+			self.__publish_polaris_lat(steering)
 	#### MKZ ####
 	def init_mkz(self):
 		from dbw_mkz_msgs.msg import SteeringCmd
@@ -16,11 +40,10 @@ class RosCallbackDefine:
 		from dbw_mkz_msgs.msg import BrakeCmd
 		from std_msgs.msg import Float64
 		from geometry_msgs.msg import TwistStamped
+		from nav_msgs.msg import Odometry
 		#### LONGITUDINAL TOPICS #### 
 		# TWIST CONTAINS FORWARD/ANGULAR VELOCITY
-		self.subTwist = rospy.Subscriber('/vehicle/twist',TwistStamped,self.twist_cb)
-		# RECEIVING COMMANDS TOPIC
-		self.subCmd = rospy.Subscriber('long_controller/cmd_vel',Float64,self.cmd_cb)
+		self.subTwist = rospy.Subscriber('/vehicle/twist',TwistStamped,self.__twist_cb)
 		# COMMAND THROTTLE TOPIC
 		self.pubThrottle = rospy.Publisher('/vehicle/throttle_cmd',ThrottleCmd,queue_size =1)
 		# COMMAND BRAKE TOPIC
@@ -28,7 +51,7 @@ class RosCallbackDefine:
 		
 		#### LATERAL TOPICS #### 
 		self.pubSteer = rospy.Publisher('/vehicle/steering_cmd',SteeringCmd,queue_size=1)		# TOPICS
-		self.subOdom = rospy.Subscriber('/vehicle/odom',Odometry,self.odom_cb)
+		self.subOdom = rospy.Subscriber('/vehicle/odom',Odometry,self.__odom_cb)
 		
 		#### CREATE PUBLISHING MESSAGES 
 		self.throttleMsg = ThrottleCmd()
@@ -41,32 +64,29 @@ class RosCallbackDefine:
 		self.brakeMsg.pedal_cmd_type = 2
 		self.steeringMsg.enable = True
 
-	def return_mkz(self):
-		if sum(self.flag) == length(self.flag):
-			return [[self.vx_measure, self.vx_desired, self.pose_x, self.pose_y, self.yaw],
-				[self.pubThrottle, self.pubBrake, self.pubSteer]]
+	def __return_mkz(self):
+		if sum(self.flag) == len(self.flag):
+			return [self.vx_measure, self.pose_x, self.pose_y, self.yaw]
 		else:
-			return 0
-	def publish_mkz(self,throttle,brake,steering):
+			return [0]
+	def __publish_mkz_long(self,throttle,brake):
 		# Assign the values passed
 		self.throttleMsg.pedal_cmd = throttle
 		self.brakeMsg.pedal_cmd = brake
-		self.steeringMsg.steering_wheel_angle_cmd = steering
 		# Publish the messages	
-		self.pubThrottle.Publish(self.throttleMsg)
-		self.pubBrake.Publish(self.brakeMsg)
-		self.pubSteer.Publish(self.steeringMsg)
+		self.pubThrottle.publish(self.throttleMsg)
+		self.pubBrake.publish(self.brakeMsg)
+	def __publish_mkz_lat(self,steering):
+		self.steeringMsg.steering_wheel_angle_cmd = steering
+		self.pubSteer.publish(self.steeringMsg)
+
 	# TODO RID OF TWIST_CB #
-	def twist_cb(self):
+	def __twist_cb(self,msg):
         	self.vx_measure = msg.twist.linear.x
 		self.flag[0] = 1 
-	def cmd_cb(self,msg):
-		self.vx_desired = msg.data
-		self.flag[1] = 1
-	def odom_cb(self,msg):
+	def __odom_cb(self,msg):
 		self.pose_x = msg.pose.pose.position.x
 		self.pose_y = msg.pose.pose.position.y
-		#self.pose.x = msg.pose.pose.position.z
 		quat = msg.pose.pose.orientation
 		euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
 		self.roll = euler[0]
@@ -74,5 +94,6 @@ class RosCallbackDefine:
 		self.yaw = euler[2]
 		self.linearX = msg.twist.twist.linear.x
 		self.angularZ = msg.twist.twist.angular.z	
-		self.flag[2] = 1					#Set flag
+		self.flag[1] = 1					#Set flag
 	#### POLARIS ####
+

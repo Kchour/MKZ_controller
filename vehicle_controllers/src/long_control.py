@@ -12,7 +12,7 @@ import pdb
 ####
 
 #### USAGE
-#    SIMPLY IMPORT AND CREATE AN INSTACE OF CLASS LongController
+#    SIMPLY IMPORT AND CREATE AN INSTANCE OF CLASS LongController
 #    or run it 
 
 class LongController:
