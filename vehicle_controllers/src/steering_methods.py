@@ -29,7 +29,6 @@ class SteeringMethods:
 	self.LA = lookAhead
 	self.WB = wheelBase
 	self.SR = steeringRatio
-	pdb.set_trace()
 
         #### PRINT MESSAGES FOR DEBUG
         #print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,self.vx_measure,throttleMsg.pedal_cmd,brakeMsg.pedal_cmd,PIDcontroller.errorTotalReturn())
@@ -39,9 +38,8 @@ class SteeringMethods:
 	self.pose_x = msg.pose.pose.position.x
 	self.pose_y = msg.pose.pose.position.y
 	#self.pose.x = msg.pose.pose.position.z
-	quat = msg.pos
-	pdb.set_trace()
-	euler = tf.transformations.euler_from_quaternion(quat)
+	quat = msg.pose.pose.orientation
+	euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
 	self.roll = euler[0]
 	self.pitch = euler[1]
 	self.yaw = euler[2]
@@ -79,7 +77,7 @@ class SteeringMethods:
  	wheelBase = self.WB	
 	if self.flag==1:
 		#### Find closest waypoint 
-		diff = self.pathArray - np.array[self.pose.x,self.pose.y]
+		diff = self.pathArray - np.array[self.pose_x,self.pose_y]
 		diffSq = diff[:,0]**2 + diff[:,1]**2
 		minInd = np.argmin(diffSq)
 		distList = np.sqrt(diffSq)
@@ -99,7 +97,7 @@ class SteeringMethods:
 		targetX = self.pathArray[self.targetPoint][0]
 		targetY = self.pathArray[self.targetPoint][1]
 		#### See terminology: https://aviation.stackexchange.com/questions/8000/what-are-the-differences-between-bearing-vs-course-vs-direction-vs-heading-vs-tr#8947
-		absoluteBearing = np.atan2(targetY - self.pose.y, targetX - self.pose.x)
+		absoluteBearing = np.atan2(targetY - self.pose_y, targetX - self.pose_x)
 		relativeBearing = self.angleDiff(eastingBearing,self.yaw)			#Heading Error basically
 	
 		#### Compute desired curvature

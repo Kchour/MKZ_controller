@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import rospy
-from dbw_mkz_msgs.msg import SteeringCmd
 from pid import PID
 from steering_methods import SteeringMethods
 import pdb
+from ros_callback import RosCallbackDefine
 
 #### TO CHANGE ROS WORKING DIRECTORY
 #### export ROS_HOME=$HOME 
@@ -15,7 +15,10 @@ import pdb
 
 class LatController:
     def __init__(self):
-        #### Callback Flags, length = number of callbacks 
+        #### ROS TOPICS
+        #--------------
+        # GET POSITION TOPIC
+	self.subPos = rospy.Subscriber('/vehicle/odom',Odometry,self.odom_cb)
         self.pubSteer = rospy.Publisher('/vehicle/steering_cmd',SteeringCmd,queue_size=1)		# TOPICS
         SteeringMsg = SteeringCmd()	    # CREATE MESSAGE OBJECTS FOR PUBLISHING
         SteeringMsg.enable = True	    # initialize them
@@ -29,7 +32,7 @@ class LatController:
 		# methodPurePursuit function 
 		# will use default values, otherwise specify them: lookAhead=self.LA,WheelBase=self.WB,SteeringRatio=self.SR
 		# Returns steercmd, curv, eastingBearing,relativeBearing, self.targetPoint
-		steercmd, curv, absoluteBearing, relativeBearing, targetPoint = SteeringFF.methodPurePursuit()
+		steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit()
 		SteeringMsg.steering_wheel_angle_cmd = steercmd		
 		pubSteer.publish(SteeringMsg)
 		rate.sleep()
