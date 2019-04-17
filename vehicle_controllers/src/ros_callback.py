@@ -2,45 +2,38 @@
 
 import rospy 
 import tf
-import pdb
 
 class RosCallbackDefine:
 	def __init__(self,vehicle):
 		self.vehicle = vehicle
-		self.vehList = ["MKZ","POLARIS"]
-	
+		self.vehList = ["MKZ", "POLARIS"]
 		if vehicle == self.vehList[0]:
-			self.init_mkz()
+			self.__init_mkz()
 			self.flag = [0,0]	#3 callback functions for now	
 		elif vehicle == self.vehList[1]:
-			self.init_polaris()
+			self.__init_polaris()
 
-	#### PLATFORM AGNOSTIC FUNCTIONS
+	#### PLATFORM AGNOSTIC FUNCTIONS:w
 	def return_states(self):
 		if self.vehicle == self.vehList[0]:
 			return self.__return_mkz()
-		elif self.vehicle == self.vehList[1]:
-			return self.__return_polaris()
-
-	def publish_vehicle_long(self,throttle,brake):
-		if self.vehicle == self.vehList[0]:
-			self.__publish_mkz_long(throttle,brake)
-		elif self.vehicle == self.vehList[1]:
-			self.__publish_polaris_long(throttle,brake)
 
 	def publish_vehicle_lat(self,steering):
 		if self.vehicle == self.vehList[0]:
-			self.__publish_mkz_lat(steering)
-		elif self.vehicle == self.vehList[1]:
-			self.__publish_polaris_lat(steering)
+			self.__publish_mkz_lat(steering)	
+	
+	def publish_vehicle_long(self,throttle,brake):
+		if self.vehicle == self.vehList[0]:
+			self.__publish_mkz_long(throttle,brake)	
 	#### MKZ ####
-	def init_mkz(self):
+	def __init_mkz(self):
 		from dbw_mkz_msgs.msg import SteeringCmd
 		from dbw_mkz_msgs.msg import ThrottleCmd
 		from dbw_mkz_msgs.msg import BrakeCmd
 		from std_msgs.msg import Float64
 		from geometry_msgs.msg import TwistStamped
 		from nav_msgs.msg import Odometry
+		from sensor_msgs.msg import NavSatFix
 		#### LONGITUDINAL TOPICS #### 
 		# TWIST CONTAINS FORWARD/ANGULAR VELOCITY
 		self.subTwist = rospy.Subscriber('/vehicle/twist',TwistStamped,self.__twist_cb)
@@ -69,17 +62,19 @@ class RosCallbackDefine:
 			return [self.vx_measure, self.pose_x, self.pose_y, self.yaw]
 		else:
 			return [0]
-	def __publish_mkz_long(self,throttle,brake):
-		# Assign the values passed
-		self.throttleMsg.pedal_cmd = throttle
-		self.brakeMsg.pedal_cmd = brake
-		# Publish the messages	
-		self.pubThrottle.publish(self.throttleMsg)
-		self.pubBrake.publish(self.brakeMsg)
+
 	def __publish_mkz_lat(self,steering):
+		# Assign the values passed
 		self.steeringMsg.steering_wheel_angle_cmd = steering
+		# Publish the messages	
 		self.pubSteer.publish(self.steeringMsg)
 
+	def __publish_mkz_long(self, throttle,brake):
+		self.throttleMsg.pedal_cmd = throttle
+		self.brakeMsg.pedal_cmd = brake
+		
+		self.pubThrottle.publish(self.throttleMsg)
+		self.pubBrake.publish(self.brakeMsg)
 	# TODO RID OF TWIST_CB #
 	def __twist_cb(self,msg):
         	self.vx_measure = msg.twist.linear.x
@@ -96,4 +91,3 @@ class RosCallbackDefine:
 		self.angularZ = msg.twist.twist.angular.z	
 		self.flag[1] = 1					#Set flag
 	#### POLARIS ####
-

@@ -9,7 +9,7 @@ import pdb
 #    USE ESTIMATOR TO GET VEHICLE ODOM FIRST
 
 class SteeringMethods:
-    def __init__(self,filename='default',lookAhead=10.0,wheelBase = 2.85,steeringRatio = 14.8):
+    def __init__(self,filename='default',lookAhead=5.0,wheelBase = 2.87,steeringRatio = 14.8):
 	#### TODO: RAISE ERROR IF filename is default
 	#### TODO: RAISE ERROR IF INITIAL VEHICLE POSITION IS NOT SET
         #### Callback Flags, length = number of callbacks 
@@ -39,9 +39,10 @@ class SteeringMethods:
 	txt  =np.loadtxt(filename,delimiter=',')
 	return txt
 
-    def angleDiff(self,value,angle):
+    def angleDiff(self,a,b):
 	#### SEE IMPLEMENTATION: https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
-	return np.fmod((angle+np.pi),2*np.pi)-np.pi
+	diff = a - b
+	return np.fmod((diff+np.pi),2*np.pi)-np.pi
 
     def setParams(self,lookAhead, wheelBase, steeringRatio):
 	self.LA = lookAhead
@@ -72,6 +73,7 @@ class SteeringMethods:
 	#minval = np.min(np.sqrt(diffsq))
 
 	i = minInd
+	#i = targetPoint
 	#### Find waypoint some lookahead away
 	while i >= 0:
 		if distList[i] >= lookAhead:
@@ -79,7 +81,7 @@ class SteeringMethods:
 			break
 		else:
 			i += 1
-			if i > len(self.pathArray):
+			if i > len(self.pathArray)-1:
 				i = 0
 	#### Compute relative bearing
 	targetX = self.pathArray[targetPoint][0]
@@ -93,7 +95,7 @@ class SteeringMethods:
 
 	#### Compute steering command (ackermann geometry)
 	steercmd = steeringRatio*np.arctan2(wheelBase*curv,1)
-
+	print targetPoint, minInd, distList[i]
 	return steercmd, curv, absoluteBearing,relativeBearing, targetPoint
 
 	   

@@ -41,7 +41,7 @@ class SteeringFeedForward:
 	self.SR = SteeringRatio
 
         #### PRINT MESSAGES FOR DEBUG
-        print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,self.vx_measure,throttleMsg.pedal_cmd,brakeMsg.pedal_cmd,PIDcontroller.errorTotalReturn())
+	print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,self.vx_measure,throttleMsg.pedal_cmd,brakeMsg.pedal_cmd,PIDcontroller.errorTotalReturn())
 
     #### CALLBACK FUNCTIONS
     def odom_cb(self,msg):

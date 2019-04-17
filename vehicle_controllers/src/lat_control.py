@@ -15,9 +15,9 @@ from ros_callback import RosCallbackDefine
 		
 class LatController:
     def __init__(self):
-		
+	wpfile = rospy.get_param('waypoints_file','circlefixed_example.dat')
 	#### CREATE SteeringFeedForward Object. Pass in the waypoints
-	steeringFF = SteeringMethods('circlefixed_example.dat')	#Using default mkz values, otherwise specify them: LookAhead = 10.0, WheelBase = 2.85, SteeringRatio = 14.8
+	steeringFF = SteeringMethods(wpfile)	#Using default mkz values, otherwise specify them: LookAhead = 10.0, WheelBase = 2.85, SteeringRatio = 14.8
 	topic_helper = RosCallbackDefine("MKZ")		
 	#### CREATE LOOP 
 	rate=rospy.Rate(50)
@@ -31,7 +31,7 @@ class LatController:
 			pose_x = states[1]
 			pose_y = states[2]
 			yaw = states[3]
-			print states
+			#print states
 			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(pose_x,pose_y,yaw)		# Calculate steering 
 			topic_helper.publish_vehicle_lat(steercmd)									# Publish the steering cmd	
 		rate.sleep()
@@ -43,6 +43,7 @@ if __name__=="__main__":
         latcontroller = LatController()
     except rospy.ROSInterruptException:
         pass
+
 
     
 

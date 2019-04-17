@@ -1,3 +1,40 @@
+# RosCallbackDefine Class
+Contains a python helper class called RosCallbackDefine to publish/subscribe to topics more easily
+## API
+* RosCallbackDefine(vehicle)
+	* vehicle: "MKZ", "POLARIS"
+* return_states()
+	* returns an array of length 6 if internal callbacks are happening
+	* returns an array of length 1 otherwise
+Returns the states of the vehicle (x,y,xdot, angdot, yaw)
+* publish_vehicle_long(throttle, brake)
+	* throttle: float between 0-1
+	* brake: float between 0-1
+* publish_vehicle_lat(float64 steering)
+	* steering: float between 0-1
+## usage
+```python
+import rospy
+from ros_callback import RosCallbackDefine
+topic_helper = RosCallbackDefine("MKZ")
+rate = rospy.Rate(50)
+while not rospy.is_shutdown():
+	states = topic_helper.return_states()
+	if len(states) > 1:
+		""" Algorithm here """
+		""" returns throttleCmd, brakeCmd, steerCmd """
+		topic_helper.publish_vehicle_long(throttleCmd,brakeCmd)
+		topic_helper.publish_vehicle_lat(steerCmd)
+	rate.sleep()
+```
+
+## requirements
+The following messages are required (either build from source or install them)
+1.dbw_mkz_msgs
+	1. dbw_mkz_msgs
+1.pacmod3
+	1. stuff
+
 # To install
 1. Install ROS Kinetic with Ubuntu 16.04
 1. Install dbw_mkz_simulator from dataspeed inc.: https://bitbucket.org/DataspeedInc/dbw_mkz_simulation (use the deprecated version)
