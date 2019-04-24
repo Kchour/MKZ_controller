@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+#### WIP SCRIPT #### 
 #### THIS SCRIPT IS USED TO CREATE FUSE SENSOR IN VEHICLE ####
+#### This requires xsens_mti_ros_node custom_msgs package ####
+#### See their old github #### 
+#### Create a kalman filter class #### 
 import rospy
 from custom_msgs.msg import positionEstimate
 from custom_msgs.msg import orientationEstimate
