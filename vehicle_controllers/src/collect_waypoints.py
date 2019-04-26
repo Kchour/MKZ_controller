@@ -10,7 +10,7 @@ import utm
 #from geometry_msgs.msg import Point32
 #from geometry_msgs.msg import PointStamped
 from nav_msgs.msg import Odometry
-from vehicle_controller.msg import customOdom2
+from vehicle_controllers.msg import customOdom2
 #from sensor_msgs.msg import NavSatFix
 #from custom_msgs.msg import positionEstimate
 #from custom_msgs.msg import orientationEstimate
@@ -51,7 +51,7 @@ class CollectWaypoints():
   		rate = rospy.Rate(50)
 		rospy.on_shutdown(self.shutdown_hook)
 		while not rospy.is_shutdown():
-			if sum(self.flag) >= 2:
+			if self.flag == 1:
 				self.pathArray.append(self.point)
 			rate.sleep()
 	
@@ -59,11 +59,10 @@ class CollectWaypoints():
         def shutdown_hook(self):
             self.shutdown_flag = True
 	    self.pathArray = np.asarray(self.pathArray)
-   	    np.savetxt(self.filename,self.pathArray.T,delimiter=',') 
-	    
+   	    np.savetxt(self.filename,self.pathArray,delimiter=',') 
 	    plt.figure()
 	    plt.scatter(self.pathArray[:,0],self.pathArray[:,1])
-	    plt.title("rtk")
+	    plt.title("waypoints")
             plt.show()
 
 	def odom_callback(self,data,args):
@@ -71,14 +70,15 @@ class CollectWaypoints():
 		if args == "quat":
 			lat_ = data.pose.pose.position.x
 			long_ = data.pose.pose.position.y
-		else
+		else:
 			lat_ = data.x
 			long_ = data.y
+		print self.point[0],self.point[1], "\n"
 		temp=utm.from_latlon(lat_,long_)	
 		self.point[0] = temp[0]
 		self.point[1] = temp[1]
 		self.flag = 1
-		print self.point[0],self.point[1] "\n"
+
                 
 			
 if __name__=='__main__':
