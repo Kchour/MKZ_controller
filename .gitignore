@@ -119,3 +119,4 @@ venv.bak/
 */.catkin_tools/*
 *.bag
 *.weights
+*/CATKIN_IGNORE
