@@ -48,6 +48,7 @@ oQuatPub = rospy.Publisher("/vehicle/odom", Odometry, queue_size=1)
 odomQuat = Odometry()
 odomEuler = customOdom2()
 
+count = 1
 rate = rospy.Rate(50)
 while not rospy.is_shutdown():
 		
@@ -61,6 +62,8 @@ while not rospy.is_shutdown():
 	odomQuat.pose.pose.position.y = y	
 	odomQuat.pose.pose.position.z = z	
 	odomQuat.frame_id = "Kenny"
+	odomQuat.header.seq = count
+	odomQuat.stamp = rospy.Time.now()
 	#### Fill in euler odometry
 	odomEuler.x = x
 	odomEuler.y = y
@@ -68,10 +71,13 @@ while not rospy.is_shutdown():
 	odomEuler.roll = roll
 	odomEuler.pitch = pitch
 	odomEuler.yaw = yaw
+	odomEuler.header.seq = count
+	odomEuler.stamp = rospy.Time.now()	
 	#### Publish 	
 	oQuatPub.publish(odomQuat)
 	oEulerPub.publish(odomEuler)
-
+	#### Sleep and count
+	count += 1
 	rate.sleep()
 
 
