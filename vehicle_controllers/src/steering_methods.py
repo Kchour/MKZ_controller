@@ -36,7 +36,7 @@ class SteeringMethods:
             return value
 
     def readText(self,filename = 'circlefixed_example.dat'):
-	txt  =np.loadtxt(filename,delimiter=',')
+	txt  = np.loadtxt(filename,delimiter=',')
 	return txt
 
     def angleDiff(self,a,b):
@@ -95,7 +95,7 @@ class SteeringMethods:
 
 	#### Compute steering command (ackermann geometry)
 	steercmd = steeringRatio*np.arctan2(wheelBase*curv,1)
-	print targetPoint, minInd, distList[i]
+	print targetPoint, minInd, distList[i], relativeBearing
 	return steercmd, curv, absoluteBearing,relativeBearing, targetPoint
 
 	   

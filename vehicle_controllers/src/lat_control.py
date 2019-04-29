@@ -15,7 +15,7 @@ from ros_callback import RosCallbackDefine
 		
 class LatController:
     def __init__(self):
-	wpfile = rospy.get_param('waypoints_file','circlefixed_example.dat')
+	wpfile = rospy.get_param('waypoints_file',"odom_waypoints.dat")
 	#### CREATE SteeringFeedForward Object. Pass in the waypoints
 	steeringFF = SteeringMethods(wpfile)	#Using default mkz values, otherwise specify them: LookAhead = 10.0, WheelBase = 2.85, SteeringRatio = 14.8
 	topic_helper = RosCallbackDefine("MKZ")		

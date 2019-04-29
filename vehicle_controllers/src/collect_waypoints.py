@@ -29,7 +29,7 @@ class CollectWaypoints():
 		self.pathArray = []
 		self.point = [0,0]
 		rospy.Subscriber("/vehicle/odom",Odometry,self.odom_callback,("quat"))
-		rospy.Subscriber("/vehicle/odom2",customOdom2,self.odom_callback,("euler"))
+		#rospy.Subscriber("/vehicle/odom2",customOdom2,self.odom_callback,("euler"))
 		##car
 		#rospy.Subscriber("/mti/filter/position",positionEstimate,self.mtiCallback) #Need to modify for mti
 		##rospy.Subscriber("/odometry/filtered/utm",Odometry,self.posCallback) #Need to modify for mti
@@ -52,7 +52,7 @@ class CollectWaypoints():
 		rospy.on_shutdown(self.shutdown_hook)
 		while not rospy.is_shutdown():
 			if self.flag == 1:
-				self.pathArray.append(self.point)
+				self.pathArray.append([self.point[0],self.point[1]])
 			rate.sleep()
 	
 	
@@ -68,15 +68,15 @@ class CollectWaypoints():
 	def odom_callback(self,data,args):
             if self.shutdown_flag == False:
 		if args == "quat":
-			lat_ = data.pose.pose.position.x
-			long_ = data.pose.pose.position.y
+			x = data.pose.pose.position.x
+			y = data.pose.pose.position.y
 		else:
-			lat_ = data.x
-			long_ = data.y
+			x = data.x
+			y = data.y
+		#temp=utm.from_latlon(lat_,long_)	
+		self.point[0] = x
+		self.point[1] = y
 		print self.point[0],self.point[1], "\n"
-		temp=utm.from_latlon(lat_,long_)	
-		self.point[0] = temp[0]
-		self.point[1] = temp[1]
 		self.flag = 1
 
                 
