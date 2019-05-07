@@ -1,8 +1,8 @@
+#!/usr/bin/env python
 # This script collects waypoints and saves them to textfiles
 # Specifically, it collects gps coordinates to one file
 # and both gps and odometry (meters) into another
 
-#!/usr/bin/env python
 import rospy
 import math
 import numpy as np
@@ -28,7 +28,7 @@ class CollectWaypoints():
 		self.filename = "odom_waypoints.dat"
 		self.pathArray = []
 		self.point = [0,0]
-		rospy.Subscriber("/vehicle/odom",Odometry,self.odom_callback,("quat"))
+		rospy.Subscriber("/vehicle/odom1",Odometry,self.odom_callback,("quat"))
 		#rospy.Subscriber("/vehicle/odom2",customOdom2,self.odom_callback,("euler"))
 		##car
 		#rospy.Subscriber("/mti/filter/position",positionEstimate,self.mtiCallback) #Need to modify for mti
@@ -58,7 +58,7 @@ class CollectWaypoints():
 	
         def shutdown_hook(self):
             self.shutdown_flag = True
-	    self.pathArray = np.asarray(self.pathArray)
+            self.pathArray = np.asarray(self.pathArray[1:-1])	#Ignore the first one
    	    np.savetxt(self.filename,self.pathArray,delimiter=',') 
 	    plt.figure()
 	    plt.scatter(self.pathArray[:,0],self.pathArray[:,1])

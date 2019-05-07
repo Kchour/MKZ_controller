@@ -99,12 +99,6 @@ class SteeringMethods:
 	return steercmd, curv, absoluteBearing,relativeBearing, targetPoint
 
 	   
-if __name__=="__main__":
-    rospy.init_node("long_controller_node")
-    try:
-        steeringmethods = SteeringMethods()
-    except rospy.ROSInterruptException:
-        pass
 
     
 

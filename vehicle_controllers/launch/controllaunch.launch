@@ -8,16 +8,16 @@
 	<!--param name="location" value="$(find vehicle_controllers)"/-->
 
 	<group unless="$(arg IS_CP)">
-		<node pkg="vehicle_controllers" type="long_control.py" name="long_control_node">
+		<node pkg="vehicle_controllers" type="long_control" name="long_control_node">
 			<param name="desired_speed" value="$(arg DESIRED_SPEED)"/>
 		</node>
-		<node pkg="vehicle_controllers" type="lat_control.py" name="lat_control_node" cwd="node">
+		<node pkg="vehicle_controllers" type="lat_control" name="lat_control_node" cwd="node">
 			<param name="waypoints_file" value="$(arg WAYPOINTS_FILE)"/>
 		</node>
 	</group>
 
 	<group if="$(arg IS_CP)">
-		<node pkg="vehicle_controllers" type="collect_waypoints.py" name="waypoint_collection_node">
+		<node pkg="vehicle_controllers" type="collect_waypoints" name="waypoint_collection_node">
 			<param name="waypoints_file" value="$(arg WAYPOINTS_FILE)"/>
 		</node>	
 	</group>
