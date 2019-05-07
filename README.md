@@ -8,13 +8,13 @@ Contains a python helper class called RosCallbackDefine to publish/subscribe to 
 * RosCallbackDefine(vehicle)
 	* vehicle: "MKZ", "POLARIS"
 * return_states()
-	* returns an array of length 6 if internal callbacks are happening
+	* returns an array of length 4 if internal callbacks are happening
 	* returns an array of length 1 otherwise
-Returns the states of the vehicle (x,y,xdot, angdot, yaw)
+Returns the states of the vehicle (xdot,x,y, yaw)
 * publish_vehicle_long(throttle, brake)
 	* throttle: float between 0-1
 	* brake: float between 0-1
-* publish_vehicle_lat(float64 steering)
+* publish_vehicle_lat(steering)
 	* steering: float between 0-1
 ## Usage
 ```python
@@ -32,7 +32,7 @@ while not rospy.is_shutdown():
 	rate.sleep()
 ```
 
-PID and steering classes are also avaible via:
+PID and steering classes are also avaible via (check lat or long_control in /node folder for examples):
 ```python
 from vehicle_controllers.algorithm import PID
 from vehicle_controllers.algorithm import SteeringMethods
@@ -74,8 +74,9 @@ Options:
 ```
 
 1. Launch the simulation by following the steps above
-1. Generate a list of waypoints (delimited by ','...see /nodes folder) or collect waypoints using the waypoint_collect script under /nodes folder
-	1. Use a teleop package to move the vehicle: https://wiki.ros.org/teleop_twist_keyboard
+1. Generate a list of waypoints (delimited by ','...see /nodes folder) or collect waypoints using the waypoint_collect script under /nodes folder.
+	1. An example set of waypoints are provided by the file "circlefixed_example.dat". It is a circle with radius 20 meters. The vehicle in the stimulation has already been set up to follow it (with the correct orientation and positioned near the start of the waypoints).
+	1. Else,use a teleop package to move the vehicle: https://wiki.ros.org/teleop_twist_keyboard
 ```
 rosrun vehicle_controllers collect_waypoints
 ```
@@ -106,6 +107,11 @@ roslaunch vehicle_controllers controllaunch.launch
 Dont forget to source your setup.bash from ~/catkin_ws/devel/
 ```
 source ~/catkin_ws/devel/setup.bash
-```
 
+```
+# TODO
+1. Add more states returned to odom1,2 topics
+1. Implement EKF/UKF (actual sensor fusion)
+1. Waypoint planner and array topic that grows
+1. Ros moveit?
 
