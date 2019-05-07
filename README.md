@@ -41,9 +41,9 @@ from vehicle_controllers.algorithm import SteeringMethods
 
 ## Dependencies for callback helper
 The following messages are required (either build from source or install them)
-1.dbw_mkz_msgs
+1. dbw_mkz_msgs
 	1. Go to Dataspeed inc. bitbucket (dbw_mkz_ros)
-1.pacmod_msgs
+1. pacmod_msgs
 	1. Get astuff_msgs from their github
 
 
