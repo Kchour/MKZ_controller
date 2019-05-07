@@ -1,3 +1,7 @@
+# Lincoln MKZ simulator
+Adapted from dbw_mkz_gazebo (dataspeed inc.) to fit our needs. Contains some helper classes for controlling the vehicle. The package can be used on the real mkz or polaris
+
+
 # RosCallbackDefine Class
 Contains a python helper class called RosCallbackDefine to publish/subscribe to topics more easily
 ## API
@@ -12,10 +16,10 @@ Returns the states of the vehicle (x,y,xdot, angdot, yaw)
 	* brake: float between 0-1
 * publish_vehicle_lat(float64 steering)
 	* steering: float between 0-1
-## usage
+## Usage
 ```python
 import rospy
-from ros_callback import RosCallbackDefine
+from vehicle_controllers.utility import RosCallbackDefine
 topic_helper = RosCallbackDefine("MKZ")
 rate = rospy.Rate(50)
 while not rospy.is_shutdown():
@@ -28,14 +32,22 @@ while not rospy.is_shutdown():
 	rate.sleep()
 ```
 
-## requirements
+PID and steering classes are also avaible via:
+```python
+from vehicle_controllers.algorithm import PID
+from vehicle_controllers.algorithm import SteeringMethods
+
+```
+
+## Dependencies for callback helper
 The following messages are required (either build from source or install them)
 1.dbw_mkz_msgs
-	1. dbw_mkz_msgs
-1.pacmod3
-	1. stuff
+	1. Go to Dataspeed inc. bitbucket (dbw_mkz_ros)
+1.pacmod_msgs
+	1. Get astuff_msgs from their github
 
-# To install
+
+# To Run the Simulator
 1. Install ROS Kinetic with Ubuntu 16.04
 1. Install dbw_mkz_simulator from dataspeed inc.: https://bitbucket.org/DataspeedInc/dbw_mkz_simulation (use the deprecated version)
 # To build and run
@@ -49,6 +61,29 @@ The following messages are required (either build from source or install them)
 ## To change initial orientation/location (radians/meters)
 1. Go to /yaml/controller_single_vehicle_test_track_infrasim.yaml
 1. Change the yaw/xyz value here 
+
+# Running the Controllers
+1. Provide combined odom topic via
+```
+rosrun vehicle_controllers odompubtest [OPTIONS]
+
+Options:
+	MKZSIM		Running on a simulation	
+	MKZREAL		Running on the actual mkz vehicle
+	POLARIS		Running on the actual polaris vehicle
+```
+
+1. Launch the simulation by following the steps above
+1. Generate a list of waypoints (delimited by ','...see /nodes folder) or collect waypoints using the waypoint_collect script under /nodes folder
+	1. Use a teleop package to move the vehicle: https://wiki.ros.org/teleop_twist_keyboard
+```
+rosrun vehicle_controllers collect_waypoints
+```
+1. Launch the controllers via
+``` 
+roslaunch vehicle_controllers controllaunch.launch
+```
+1. Feel free to modify the parameters in the launch file. HINT: You can also run the waypoint_collect script from the launch file
 
 # Topics
 ## Relevant Topics Published
@@ -66,5 +101,11 @@ The following messages are required (either build from source or install them)
 1. For message api, see http://docs.ros.org/melodic/api/dbw_mkz_msgs/html/index-msg.html
 1. Note: use either /vehicle/cmd_vel OR the 3 actuators directly...not both at the same time!
 
+
+# Troubleshooting
+Dont forget to source your setup.bash from ~/catkin_ws/devel/
+```
+source ~/catkin_ws/devel/setup.bash
+```
 
 

@@ -68,7 +68,7 @@ class LongController:
 			    else:
 				PIDcontroller.setGains(0.05,0.,0.)
 			     
-			    u = PIDcontroller.computeControl()      # Compute Control input
+			    u = PIDcontroller.computeControl()           # Compute Control input
 			    u = self.satValues(abs(u),0.0,1.0)           # Bound control input
 			    brake_cmd = u                  # set brake
 			    throttle_cmd = 0.0             # set throttle to 0

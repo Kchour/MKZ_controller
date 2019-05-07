@@ -166,7 +166,8 @@ install(PROGRAMS
    nodes/odompubtest
    nodes/collect_waypoints
 #   scripts/my_python_script
-   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+   DESTINATION ${PROJECT_NAME}/nodes
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## Mark executables and/or libraries for installation
