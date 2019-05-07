@@ -51,7 +51,7 @@ The following messages are required (either build from source or install them)
 1. Install ROS Kinetic with Ubuntu 16.04
 1. Install dbw_mkz_simulator from dataspeed inc.: https://bitbucket.org/DataspeedInc/dbw_mkz_simulation (use the deprecated version)
 # To build and run
-1. place infrasim2 into your ~/yourcatkin_ws/src
+1. Download packages to your workspace at: ~/yourcatkin_ws/src
 1. catkin_make or catkin build
 1. source ~/yourcatkin_ws/devel/setup.bash
 1. roslaunch infrasim2 controller_test_infrasim.launch
