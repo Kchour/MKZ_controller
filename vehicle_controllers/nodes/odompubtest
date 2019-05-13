@@ -88,15 +88,24 @@ class MessageHandle:
             self.x = temp[0]
             self.y = temp[1]
         if args[1] == "ORIENTATION":
-            q = msg.pose.pose.orientation
-            euler = tf.transformations.euler_from_quaternion(q.x, q.y, q.z, q.w)
-            self.qx = q.x
-            self.qy = q.y
-            self.qz = q.z
-            self.qw = q.w
-            self.roll = euler[0]
-            self.pitch = euler[1]
-            self.yaw = euler[2]
+            self.roll = np.radians(msg.RPY.x)
+	    self.pitch = np.radians(msg.RPY.y)
+	    self.yaw = np.mod(2*np.pi + np.pi/2 - np.radians(msg.RPY.z),2*np.pi)
+	
+            q = tf.transformations.quaternion_from_euler(self.roll, self.pitch, self.yaw)
+            self.qx = q[0]
+            self.qy = q[1]
+            self.qz = q[2]
+            self.qw = q[3]
+            #q = msg.pose.pose.orientation
+	    #euler = tf.transformations.euler_from_quaternion(q.x, q.y, q.z, q.w)
+            #self.qx = q.x
+            #self.qy = q.y
+            #self.qz = q.z
+            #self.qw = q.w
+            #self.roll = euler[0]
+            #self.pitch = euler[1]
+            #self.yaw = euler[2]
 
 
 #### MAIN PART OF THE SCRIPT BEGINS HERE
@@ -132,8 +141,9 @@ try:
         rospy.Subscriber("/mti/filter/position", positionEstimate, mh.callback, ("MKZREAL","POSITION"))
     #### POLARIS
     elif argv[1] == "POLARIS":
-        rospy.Subscriber("/vectornav/GPS",NavSatFix, mh.callback, ("POLARIS","POSITION"))
-        rospy.Subscriber("/vectornav/Odom",Odometry, mh.callback, ("POLARIS","ORIENTATION"))
+	from vn300.msg import ins
+        rospy.Subscriber("/vectornav/fix",NavSatFix, mh.callback, ("POLARIS","POSITION"))
+        rospy.Subscriber("/vectornav/ins",ins, mh.callback, ("POLARIS","ORIENTATION"))
 except Exception as error:
     print error
     raise ValueError("\n\nUsage: python odompubtest.py [OPTIONS] \n\n Options:\n\t MKZSIM \t subscribe to topics from simulated mkz \n\t MKZREAL\t subscribe to topics from real mkz \n\t POLARIS  \t subscribe to topics from polaris vehicle")

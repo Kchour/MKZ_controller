@@ -1,0 +1,116 @@
+#!/usr/bin/env python
+import rospy
+#from dbw_mkz_msgs.msg import BrakeCmd
+#from dbw_mkz_msgs.msg import ThrottleCmd
+from std_msgs.msg import Float64
+from geometry_msgs.msg import TwistStamped
+from vehicle_controllers.algorithm import PID
+from vehicle_controllers.utility import RosCallbackDefine
+import pdb
+
+#### TO CHANGE ROS WORKING DIRECTORY
+#### export ROS_HOME=$HOME 
+####
+
+#### USAGE
+#    SIMPLY IMPORT AND CREATE AN INSTANCE OF CLASS LongController
+#    or run it 
+
+class LongController:
+    def __init__(self):
+	#### INITIALIZE DESIRED VEHICLE SPEED
+	self.vx_desired = rospy.get_param('desired_speed',2.0)
+	self.vehicle = rospy.get_param('vehicle',"POLARIS")
+	
+	#### COMMAND VELOCITY TOPIC
+        self.subCmd = rospy.Subscriber('long_controller/cmd_vel',Float64,self.cmd_cb)
+
+        #### CREATE PID OBJECT
+        PIDcontroller=PID()
+        PIDcontroller.setLims(0.0,250.0)       #### ADJUST THE UPPER LIMIT BASED ON EXPERIMENTATION
+	
+	#### CREATE TOPIC HELPER CLASS
+	topic_helper = RosCallbackDefine(self.vehicle) 
+
+        #### PUBLISH LOOP and Additional parameters
+        rate = rospy.Rate(50)
+        errTol = 0.00000005
+	linearX_prev = 0.0
+	throttle_cmd_prev, brake_cmd_prev = 0.0, 0.0
+        while not rospy.is_shutdown():
+  	    	#### RETURN STATES
+	    	states = topic_helper.return_states()
+            	if len(states) > 1:
+			linearX = states[0]
+			pose_x = states[1]
+			pose_y = states[2]
+			yaw = states[3]
+			publishTrue = True
+		else:
+			publishTrue = False
+
+		if publishTrue ==True:
+			#### Enter loop only when callbacks happen
+			linearX = self.lowpass(linearX,linearX_prev,0.50)
+			linearX_prev = linearX
+			vxError = self.vx_desired - linearX 
+			PIDcontroller.update(vxError)
+
+			#### Gain scheduling for different regions of error
+			if vxError >= 0:
+			    if abs(vxError) >= errTol:
+				PIDcontroller.setGains(0.015,0.004,0.05)
+			    else:
+				PIDcontroller.setGains(0.015*vxError,2.5*vxError**2,0.05*vxError)
+			    
+			    u = PIDcontroller.computeControl()      # Compute Control input
+			    u = self.satValues(u,0.0,1.0)           # Bound control input
+			    throttle_cmd = u               # set throttle
+			    throttle_cmd = self.lowpass(throttle_cmd,throttle_cmd_prev,0.96)
+			    throttle_cmd_prev = throttle_cmd
+			    brake_cmd = 0.0                # set brake to 0
+			elif vxError < -1:
+			    if abs(vxError) >= errTol:
+				PIDcontroller.setGains(0.01,0.,0.)
+			    else:
+				PIDcontroller.setGains(0.005,0.,0.)
+			     
+			    u = PIDcontroller.computeControl()           # Compute Control input
+			    u = self.satValues(abs(u),0.0,1.0)           # Bound control input
+			    brake_cmd = u                  # set brake
+			    brake_cmd = self.lowpass(brake_cmd,brake_cmd_prev,0.50)
+			    brake_cmd_prev = brake_cmd
+			    throttle_cmd = 0.0             # set throttle to 0
+
+			#### PUBLISH THE MESSAGES
+			topic_helper.publish_vehicle_long(throttle_cmd,brake_cmd)
+			#### PRINT MESSAGES FOR DEBUG
+			print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,linearX,throttle_cmd,brake_cmd,PIDcontroller.errorTotalReturn())
+                rate.sleep()
+
+
+    def cmd_cb(self,msg):
+        self.vx_desired = msg.data
+    #-----------------------------
+
+    #### MISC FUNCTIONS
+    def satValues(self,value,satLower, satUpper):
+        if value >= satUpper:
+            return satUpper
+        elif value <= satLower:
+            return satLower
+        else:
+            return value
+    def lowpass(self,val,prev,alp):
+	return alp*val - (1-alp)*prev
+    
+if __name__=="__main__":
+    rospy.init_node("long_controller_node")
+    try:
+        longcontroller = LongController()
+    except rospy.ROSInterruptException:
+        pass
+
+    
+
+

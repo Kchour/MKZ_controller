@@ -1,0 +1,13 @@
+lookAhead: 10.0
+wheelBase: 2.4
+steeringRatio: 12.0
+steerLimit:
+  lower: -7.5
+  upper: 7.5
+pid:
+  P:
+  I:
+  D:
+tol: 0.5
+
+

@@ -1,0 +1,18 @@
+# Polaris Parameters
+lookAhead: 10.0
+wheelBase: 2.4
+steeringRatio: 12.0
+steerLim:
+	lower: -7.5
+	upper: 7.5
+	
+# PID GAINS
+PID:
+	P:
+	I:
+	D:
+
+# Tolerance
+Tol: 0.5
+
+

@@ -2,6 +2,8 @@
 
 import rospy 
 import tf
+import pdb
+import numpy as np
 
 class RosCallbackDefine:
 	def __init__(self,vehicle):
@@ -27,21 +29,40 @@ class RosCallbackDefine:
 			# Publish the messages	
 		elif self.vehicle == self.vehList[1]:			#### POLARIS CASE ####			
 			self.steeringMsg.command = steering
-			self.steeringMsg.rotation_rate = 10	# 2 is slow	
+			self.steeringMsg.rotation_rate = 2	# 2 is slow	
+		#### OVERRIDE AND CLEAR FAULTS ONCE
+		if self.enabled_flag_lat == False: 	
+			self.throttleMsg.clear_override = True
+			self.throttleMsg.clear_faults = True
+			
+			self.brakeMsg.clear_override = True
+			self.brakeMsg.clear_faults = True
+			self.enabled_flag_lat = True
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	
-	
+		#self.pubEnable.publish(self.enableMsg)
 	def publish_vehicle_long(self,throttle,brake):
 		if self.vehicle == self.vehList[0]:
 			self.throttleMsg.pedal_cmd = throttle
 			self.brakeMsg.pedal_cmd = brake
 		elif self.vehicle == self.vehList[1]:
 			self.throttleMsg.command = throttle
-			self.brakeMsg.command = brake			
+			self.brakeMsg.command = brake	
 		#### PUBLISH MESSAGES		
+		#### OVERRIDE WHEN GOES TO TRUE ONCE
+		if self.enabled_flag_long == False: 	
+			self.throttleMsg.clear_override = True
+			self.throttleMsg.clear_faults = True
+			
+			self.brakeMsg.clear_override = True
+			self.brakeMsg.clear_faults = True
+			self.enabled_flag_long = True
+
 		self.pubThrottle.publish(self.throttleMsg)
 		self.pubBrake.publish(self.brakeMsg)
-
+		
+		
+		#self.pubEnable.publish(self.enableMsg)
 	#### CALLBACK FUNCTIONS REUSED ####
 	#### TODO RID OF TWIST_CB ####
 	
@@ -50,7 +71,8 @@ class RosCallbackDefine:
 			self.linearX = msg.twist.linear.x
 			self.flag[0] = 1
 		elif args[0:] == self.vehList[1]:	#### POLARIS CASE ####
-			self.linearX = msg.data 
+			#self.linearX = msg.data		#### /as_tx/vehicle_speed 
+			self.linearX=np.sqrt(msg.NedVel.x**2 + msg.NedVel.y**2)
 			self.flag[0] = 1
 	def __odom_cb(self,msg,args):
 		self.pose_x = msg.x#msg.pose.pose.position.x
@@ -101,30 +123,49 @@ class RosCallbackDefine:
 		self.brakeMsg.pedal_cmd_type = 2
 		self.steeringMsg.enable = True
 
+
 	#### POLARIS ####
 	def __init_polaris(self):
 		from std_msgs.msg import Float64	#for speed
 		from pacmod_msgs.msg import SystemCmdFloat
-		from vehicle_controllers.msgs import customOdom2
+		from pacmod_msgs.msg import SteerSystemCmd
+		from vehicle_controllers.msg import customOdom2
+		from std_msgs.msg import Bool
+		from vn300.msg import ins
 		# VEHICLE NAME #
 		VEH = self.vehList[1]	# "POLARIS"
 		#### LONGITUDINAL INFO ####
-		self.subSpeed = rospy.Subscriber("/pacmod/as_tx/vehicle_speed",Float64, self.__speed_cb,(VEH))
-		self.pubThrottle = rospy.Publisher("/pacmod/ax_rx/accel_cmd",SystemCmdFloat,queue_size=1)
-		self.pubBrake = rospy.Publisher("/pacmod/as_rx/brake_cmd",SystemCmdFloat,queue_size=1)
+		#self.subSpeed = rospy.Subscriber("/as_tx/vehicle_speed",Float64, self.__speed_cb,(VEH))
+		self.subSpeed = rospy.Subscriber("/vectornav/ins",ins, self.__speed_cb,(VEH))
+		self.pubThrottle = rospy.Publisher("/as_rx/accel_cmd",SystemCmdFloat,queue_size=1)
+		self.pubBrake = rospy.Publisher("/as_rx/brake_cmd",SystemCmdFloat,queue_size=1)
 		
 		#### LATERAL INFO ####
 		self.odomSub = rospy.Subscriber("/vehicle/odom2", customOdom2, self.__odom_cb,(VEH))
-		self.pubSteer = rospy.Publisher("/pacmod/ax_rx/steer_cmd",SteerSystemCmd,queue_size=1)
+		self.pubSteer = rospy.Publisher("/as_rx/steer_cmd",SteerSystemCmd,queue_size=1)
 
-		#### CREATE PUBLISHING MESSAGES
+		#### ENABLE INFO ####
+		#self.pubEnable = rospy.Publisher("/as_rx/enable",Bool,queue_size=1)
+
+		#### State of the vehicle
+		self.enabled_flag_lat = False
+		self.enabled_flag_long = False
+		
+                #### CREATE PUBLISHING MESSAGES
 		self.throttleMsg = SystemCmdFloat()
 		self.brakeMsg = SystemCmdFloat()
 		self.steeringMsg = SteerSystemCmd()
+		#self.enableMsg = Bool()
 
 		self.throttleMsg.enable = True
 		self.brakeMsg.enable = True
 		self.steeringMsg.enable = True
+		#self.enableMsg.data = True
+
+		self.throttleMsg.ignore_overrides=False
+		self.brakeMsg.ignore_overrides=False
+		self.steeringMsg.ignore_overrides=False
+	
 
 		
 		
