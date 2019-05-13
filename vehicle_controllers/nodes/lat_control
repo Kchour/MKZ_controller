@@ -2,7 +2,9 @@
 import rospy
 from vehicle_controllers.algorithm import SteeringMethods
 from vehicle_controllers.utility import RosCallbackDefine
+import yaml
 import pdb
+import os
 
 
 #### TO CHANGE ROS WORKING DIRECTORY
@@ -14,11 +16,23 @@ import pdb
 #    or run it 
 		
 class LatController:
-    def __init__(self):
-	wpfile = rospy.get_param('waypoints_file',"odom_waypoints.dat")
+   def __init__(self):
+	path = os.path.dirname(os.path.abspath(__file__))
+	wpfile = rospy.get_param('waypoints_file',path+"/odom_waypoints.dat")
+	vehicle = rospy.get_param("vehicle","POLARIS")
+	#### READ YAML FILE
+	
+	with open(path+"/../config/polaris_values.yaml",'r') as stream:
+		data_loaded = yaml.safe_load(stream)
+	lookAhead = data_loaded['lookAhead']
+	wheelBase = data_loaded['wheelBase']
+	steeringRatio = data_loaded['steeringRatio']
+	steerLim_upper = data_loaded['steerLim']['upper']
+	steerLim_lower = data_loaded['steerLim']['lower']
+
 	#### CREATE SteeringFeedForward Object. Pass in the waypoints
-	steeringFF = SteeringMethods(wpfile)	#Using default mkz values, otherwise specify them: LookAhead = 10.0, WheelBase = 2.85, SteeringRatio = 14.8
-	topic_helper = RosCallbackDefine("MKZ")		
+	steeringFF = SteeringMethods(wpfile,lookAhead,wheelBase,steeringRatio)	#Using default mkz values, otherwise specify them: lookAhead = 10.0, wheelBase = 2.85, steeringRatio = 14.8
+	topic_helper = RosCallbackDefine(vehicle)		
 	#### CREATE LOOP 
 	rate=rospy.Rate(50)
 	while not rospy.is_shutdown():
@@ -31,10 +45,20 @@ class LatController:
 			pose_x = states[1]
 			pose_y = states[2]
 			yaw = states[3]
-			#print states
 			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(pose_x,pose_y,yaw)		# Calculate steering 
+			
+			steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
 			topic_helper.publish_vehicle_lat(steercmd)									# Publish the steering cmd	
 		rate.sleep()
+
+
+   def sat_limit(self,val,low,upper):
+		if val >= upper:
+			return upper
+		elif val <= low:
+			return low
+		else:
+			return val
 
     
 if __name__=="__main__":
