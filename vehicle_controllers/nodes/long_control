@@ -6,7 +6,7 @@ from std_msgs.msg import Float64
 from geometry_msgs.msg import TwistStamped
 from vehicle_controllers.algorithm import PID
 from vehicle_controllers.utility import RosCallbackDefine
-from vehicle_controllers.utility import Filter
+from vehicle_controllers.utility import LinearFilter
 import pdb
 import yaml
 import os
@@ -58,7 +58,7 @@ class LongController:
 
         #### CREATE PID OBJECT
         PIDcontroller=PID()
-        PIDcontroller.setLims(0.0,250.0)       #### ADJUST THE UPPER LIMIT BASED ON EXPERIMENTATION
+        PIDcontroller.setLims(0.0,125.0)       #### ADJUST THE UPPER LIMIT BASED ON EXPERIMENTATION
 	#### CREATE FILTER OBJECTS
 	#linearX_prev = 0.0
 	#throttle_cmd_prev, brake_cmd_prev = 0.0, 0.0
@@ -72,7 +72,7 @@ class LongController:
 	topic_helper = RosCallbackDefine(self.vehicle) 
 
         #### PUBLISH LOOP and Additional parameters
-        rate = rospy.Rate(50)
+        rate = rospy.Rate(30)
      
 
         while not rospy.is_shutdown():
@@ -89,8 +89,8 @@ class LongController:
 
 		if publishTrue ==True:
 			#### Enter loop only when callbacks happen
-			linearX = self.lowpass(linearX,linearX_prev,0.50)
-			linearX_prev = linearX
+			#linearX = self.lowpass(linearX,linearX_prev,0.50)
+			#linearX_prev = linearX
 			vxError = self.vx_desired - linearX 
 			PIDcontroller.update(vxError)
 
@@ -101,10 +101,11 @@ class LongController:
 				PIDcontroller.setGains(P1,I1,D1)
 			    else:
 				if ~smallErrorFlag.return_flag():
-					totError = PIDController.errorTotalReturn()
+					totError = PIDcontroller.errorTotalReturn()
 					Ki = u/(vxError*totError)
 					smallErrorFlag.set_flag(True)
-				PIDcontroller.setGains(0.,Ki*vxError,0.)
+					print "SMALL ERORR THROTTLE"
+				PIDcontroller.setGains(vxError,Ki*vxError**4,0.)
 				
 			    u = PIDcontroller.computeControl()      # Compute Control input
 			    u = self.satValues(u,0.0,1.0)           # Bound control input
@@ -113,7 +114,7 @@ class LongController:
 			    #throttle_cmd_prev = throttle_cmd
 			    throttle_cmd = throttleFilter.update_filter(u)
 			    brake_cmd = 0.0                # set brake to 0
-			elif vxError < 0:
+			elif vxError < -1.0:
 			    smallErrorFlag.set_flag(False)
 			    if abs(vxError) >= errTol:
 				PIDcontroller.setGains(P2,I2,I2)

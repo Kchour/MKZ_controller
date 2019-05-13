@@ -29,17 +29,8 @@ class RosCallbackDefine:
 			# Publish the messages	
 		elif self.vehicle == self.vehList[1]:			#### POLARIS CASE ####			
 			self.steeringMsg.command = steering
-			self.steeringMsg.rotation_rate = 2	# 2 is slow	
+			self.steeringMsg.rotation_rate = 10	# 2 is slow	
 		
-		if self.enabled_flag_lat == False and self.: 	
-			self.steeringMsg.clear_override = True
-			self.steeringMsg.clear_faults = True
-			self.enabled_flag_lat = True
-
-		if self.enabledFlag == True:
-			#### DONT CLEAR ONCE AUTONOMOUS IS SET
-		        self.steeringMsg.clear_override = False
-		        self.steeringMsg.clear_faults = False
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	
 		#self.pubEnable.publish(self.enableMsg)
@@ -51,22 +42,6 @@ class RosCallbackDefine:
 			self.throttleMsg.command = throttle
 			self.brakeMsg.command = brake	
 		#### PUBLISH MESSAGES		
-		#### OVERRIDE WHEN GOES TO TRUE ONCE
-
-		if self.enabled_flag_long == False: 	
-			self.throttleMsg.clear_override = True
-			self.throttleMsg.clear_faults = True
-			
-			self.brakeMsg.clear_override = True
-			self.brakeMsg.clear_faults = True
-			self.enabled_flag_long = True
-
-		if self.enableFlag == True:
-                	self.throttleMsg.clear_override = False
-               		self.throttleMsg.clear_faults = False
-                	self.brakeMsg.clear_override = False
-                	self.brakeMsg.clear_faults = False
-
 		self.pubThrottle.publish(self.throttleMsg)
 		self.pubBrake.publish(self.brakeMsg)
 		
@@ -82,7 +57,10 @@ class RosCallbackDefine:
 		elif args[0:] == self.vehList[1]:	#### POLARIS CASE ####
 			#self.linearX = msg.data		#### /as_tx/vehicle_speed 
 			self.linearX=np.sqrt(msg.NedVel.x**2 + msg.NedVel.y**2)
+			self.speedMsg.data = self.linearX		
+			self.pubSpeed.publish(self.speedMsg) 
 			self.flag[0] = 1
+
 	def __odom_cb(self,msg,args):
 		self.pose_x = msg.x#msg.pose.pose.position.x
 		self.pose_y = msg.y#msg.pose.pose.position.y
@@ -96,9 +74,26 @@ class RosCallbackDefine:
 		self.flag[1] = 1
 
 	#### status indicator callback for Polaris
-	def ____systemFlag_cb(self,msg,args):
-		self.enableFlag = msg.data
-
+	def __systemFlag_cb(self,msg,args):
+		self.enabledFlag = msg.data
+		if self.enabledFlag == True:
+                	self.throttleMsg.clear_override = False
+               		self.throttleMsg.clear_faults = False
+                	self.brakeMsg.clear_override = False
+                	self.brakeMsg.clear_faults = False
+		        self.steeringMsg.clear_override = False
+		        self.steeringMsg.clear_faults = False
+			self.autonomousModeOnce = True
+		elif self.autonomousModeOnce == False:
+                	self.throttleMsg.clear_override = True
+               		self.throttleMsg.clear_faults = True
+                	self.brakeMsg.clear_override = True
+                	self.brakeMsg.clear_faults = True
+		        self.steeringMsg.clear_override = True
+		        self.steeringMsg.clear_faults = True
+			self.pubBrake.publish(self.brakeMsg)	
+			self.pubThrottle.publish(self.throttleMsg)	
+			self.pubSteer.publish(self.steeringMsg)	
 
 	#### MKZ ####
 	def __init_mkz(self):
@@ -110,6 +105,20 @@ class RosCallbackDefine:
 		from nav_msgs.msg import Odometry
 		from sensor_msgs.msg import NavSatFix
 		from vehicle_controllers.msg import customOdom2
+
+
+		
+		#### CREATE PUBLISHING MESSAGES 
+		self.throttleMsg = ThrottleCmd()
+		self.brakeMsg = BrakeCmd()
+		self.steeringMsg = SteeringCmd()
+		
+		self.throttleMsg.enable = True
+		self.throttleMsg.pedal_cmd_type = 2
+		self.brakeMsg.enable = True
+		self.brakeMsg.pedal_cmd_type = 2
+		self.steeringMsg.enable = True
+
 		# VEHICLE NAME #
 		VEH = self.vehList[0]	#  "MKZ"
 		#### LONGITUDINAL TOPICS #### 
@@ -123,17 +132,6 @@ class RosCallbackDefine:
 		#### LATERAL TOPICS #### 
 		self.pubSteer = rospy.Publisher('/vehicle/steering_cmd',SteeringCmd,queue_size=1)		# TOPICS
 		self.subOdom = rospy.Subscriber('/vehicle/odom2',customOdom2,self.__odom_cb,(VEH))
-		
-		#### CREATE PUBLISHING MESSAGES 
-		self.throttleMsg = ThrottleCmd()
-		self.brakeMsg = BrakeCmd()
-		self.steeringMsg = SteeringCmd()
-		
-		self.throttleMsg.enable = True
-		self.throttleMsg.pedal_cmd_type = 2
-		self.brakeMsg.enable = True
-		self.brakeMsg.pedal_cmd_type = 2
-		self.steeringMsg.enable = True
 
 
 	#### POLARIS ####
@@ -146,6 +144,26 @@ class RosCallbackDefine:
 		from vn300.msg import ins
 		# VEHICLE NAME #
 		VEH = self.vehList[1]	# "POLARIS"
+
+		#### State of the vehicle
+		self.enabledFlag = False
+		self.autonomousModeOnce = False		#only clear faults BEFORE getting into auto mode ONCE
+		
+                #### CREATE PUBLISHING MESSAGES
+		self.throttleMsg = SystemCmdFloat()
+		self.brakeMsg = SystemCmdFloat()
+		self.steeringMsg = SteerSystemCmd()
+		self.speedMsg = Float64()	
+
+		self.throttleMsg.enable = True
+		self.brakeMsg.enable = True
+		self.steeringMsg.enable = True
+		self.enabledFlag = False	#Not in autonomous mode = false flag
+
+		self.throttleMsg.ignore_overrides=False
+		self.brakeMsg.ignore_overrides=False
+		self.steeringMsg.ignore_overrides=False
+
 		#### LONGITUDINAL INFO ####
 		#self.subSpeed = rospy.Subscriber("/as_tx/vehicle_speed",Float64, self.__speed_cb,(VEH))
 		self.subSpeed = rospy.Subscriber("/vectornav/ins",ins, self.__speed_cb,(VEH))
@@ -155,28 +173,13 @@ class RosCallbackDefine:
 		#### LATERAL INFO ####
 		self.odomSub = rospy.Subscriber("/vehicle/odom2", customOdom2, self.__odom_cb,(VEH))
 		self.pubSteer = rospy.Publisher("/as_rx/steer_cmd",SteerSystemCmd,queue_size=1)
-		self.statusFlag = rospy.Subscriber("/as_tx/enabled",Bool,self.__systemFlag_cb(VEH))
+		self.statusFlag = rospy.Subscriber("/as_tx/enabled",Bool,self.__systemFlag_cb,(VEH))
 
 		#### ENABLE INFO ####
-		#self.pubEnable = rospy.Publisher("/as_rx/enable",Bool,queue_size=1)
+		self.pubSpeed = rospy.Publisher("/vectornav/velTEST",Float64,queue_size=1)
 
-		#### State of the vehicle
-		self.enabled_flag_lat = False
-		self.enabled_flag_long = False
+
 		
-                #### CREATE PUBLISHING MESSAGES
-		self.throttleMsg = SystemCmdFloat()
-		self.brakeMsg = SystemCmdFloat()
-		self.steeringMsg = SteerSystemCmd()
-
-		self.throttleMsg.enable = True
-		self.brakeMsg.enable = True
-		self.steeringMsg.enable = True
-		self.enableFlag = False	#Not in autonomous mode = false flag
-
-		self.throttleMsg.ignore_overrides=False
-		self.brakeMsg.ignore_overrides=False
-		self.steeringMsg.ignore_overrides=False
 	
 
 		
