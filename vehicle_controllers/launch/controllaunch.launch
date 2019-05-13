@@ -4,7 +4,7 @@
 	<arg name="IS_CP" default="false"/>
 	<arg name="DESIRED_SPEED" default="4.0"/>
 	<!--arg name="WAYPOINTS_FILE" default="circlefixed_example.dat"/-->
-	<arg name="WAYPOINTS_FILE" default="waypoints.dat"/>
+	<arg name="WAYPOINTS_FILE" default="odom_waypoints.dat"/>
 	<!--param name="location" value="$(find vehicle_controllers)"/-->
 
 	<group unless="$(arg IS_CP)">
