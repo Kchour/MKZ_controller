@@ -18,14 +18,15 @@ from vehicle_controllers.msg import customOdom2
 #import scipy.signal
 import pdb
 import matplotlib.pyplot as plt
+import os
 
 class CollectWaypoints():
 
 	def __init__(self):
                 self.shutdown_flag = False
 		self.flag=0
-
-		self.filename = "odom_waypoints.dat"
+	        path = os.path.dirname(os.path.abspath(__file__))
+		self.filename = path+"/odom_waypoints.dat"
 		self.pathArray = []
 		self.point = [0,0]
 		rospy.Subscriber("/vehicle/odom1",Odometry,self.odom_callback,("quat"))

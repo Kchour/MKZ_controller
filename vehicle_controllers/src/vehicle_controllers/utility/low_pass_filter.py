@@ -4,79 +4,100 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #### Define a Base Class
-class LowPass(object):
-	def __init__(self,order,cons=None):
-		self.values = []
-		self.filtValues=[0.0]*int(order)
-		if cons == None:	
-			# Set box filter by default (a very bad one)
-			self.cons = [1.0/float(order)]*int(order)
+class Filter(object):
+	#### BY DEFAULT LETS JUST CREATE A FIR MOVING AVERAGE
+	def __init__(self,consNum=[0.25,0.75],consDen=1.0, dcGain=1.0):
+		self.consNum = consNum
+		self.consDen = consDen
+		self.DC = dcGain
+
+		if isinstance(consNum,list):
+			self.lenNum = len(consNum)
 		else:
-			self.cons = cons
-		self.order = order
-		self.len_ = len(self.filtValues)
+			self.lenNum = 0
+		if isinstance(consDen,list):
+			self.lenDen = len(consDen)
+		else:
+			self.lenDen = 0
 
-	def set_constants(self,cons):
-		#### cons should be a python list []
-		self.cons = cons
-
-	def return_constants(self):
-		return self.cons
+		self.rawValues = [0.0]*self.lenNum
+		self.filtValues=[0.0]*self.lenDen
 	
-	def update(self,valNow):
-		len_ = self.len_	
-		self.filtValues[1:len_]  = self.filtValues[0:len_-1]
-		self.filtValues[0] = valNow
-
-		#### Keep track of the past 100 raw values to estimate std
-		if len(self.values)<100:
-			#### PREPEND
-			self.values.insert(0,valNow)
+	def update_filter(self,valNow):
+		len_ = self.lenDen
+		if len_ >= 1:
+			self.filtValues[1:len_]  = self.filtValues[0:len_-1]
+			self.filtValues[0] = valNow
 		else:
-			self.values[1:100]  = self.values[0:99]
-			self.values[0] = valNow
+			self.filtValues = valNow
+
+	def update_raw(self,valNow):
+		len_ = self.lenNum
+		if len_ >= 1:
+			self.rawValues[1:len_]  = self.rawValues[0:len_-1]
+			self.rawValues[0] = valNow
+		else:	
+			self.rawValues = valNow
+		
 
 #### Define Child Classes which will inherit the Base Class and its methods from above
-class LinearFilter(LowPass):
-	
-	def __init__(self,order,cons=None):
+class LinearFilter(Filter):
+	def __init__(self,consNum=0.05,consDen=[1,-0.95],dcGain=1.0):
 		#### We use the super keyword to avoid directly referring to the base class...
 		#### In python3.0 it's a lot easier to use than in python 2.7
-		super(LinearFilter, self).__init__(order,cons)
+		super(LinearFilter, self).__init__(consNum,consDen,dcGain)
 
-	def set_constants(self,cons):
-		super(LinearFilter, self).set_constants(cons)
-
-	def return_constants(self):
-		super(LinearFilter, self).return_constants()
-
-	def filter(self,valNow):
-		# Priori Update: Latest Measurement
-		super(LinearFilter,self).update(valNow)
-		
+	def update_filter(self,valNow):
+		# Update Raw Value list
+		super(LinearFilter,self).update_raw(valNow)
 		# Compute Weighted Filtered Value
 		temp=0.0
-		for i in range(len(self.cons)):
-			temp += self.cons[i]*self.filtValues[i]
+		if self.lenNum == 0:
+			temp = self.consNum*self.rawValues		
+		elif self.lenNum == 1:
+			temp = self.consNum[0]*self.rawValues[0]
+		else:
+			for i in range(self.lenNum):
+				temp += self.consNum[i]*self.rawValues[i]
 		
-		# Posteriori Update: Latest filtered value 
-		self.filtValues[0] = temp		
+
+		# SUM THE PREVIOUS FILTERED VALUE
+	
+		if self.lenDen == 0:
+			temp = temp/self.consDen
+		elif self.lenDen == 1:
+			temp = temp/self.consDen[0]
+		else:
+			for j in range(self.lenDen-1):
+				# filtValue is nonrecursive jth spot is n-1
+				temp -= self.consDen[j+1]*self.filtValues[j]
+			temp = temp/self.consDen[0]
+
+		# DC GAIN
+		temp *= self.DC
+
+		# Latest filtered value 
+		super(LinearFilter,self).update_filter(temp)	
 		return temp
 
+	
 #### Nonlinear filter test
 #### Same as previous
-class NonLinearFilter(LowPass):
+class NonLinearFilter(Filter):
 		
 	def __init__(self,order,cons=None):
 		#### We use the super keyword to avoid directly referring to the base class...
 		#### In python3.0 it's a lot easier to use than in python 2.7
 		super(NonLinearFilter, self).__init__(order,cons)
 
-	def set_constants(self,cons):
-		super(NonLinearFilter, self).set_constants(cons)
 
-	def return_constants(self):
-		super(NonLinearFilter, self).return_constants()
+		#### Keep track of the past 100 raw values to estimate std
+		if len(self.values)<100:
+			#### PREPEND
+			self.rawValues.insert(0,valNow)
+		else:
+			self.rawvalues[1:100]  = self.rawValues[0:99]
+			self.rawValues[0] = valNow
 
 	def __nonlinear_gain(self,valNow,R):
 		# To prevent underestimating of the variance, use ddof=1
@@ -87,8 +108,8 @@ class NonLinearFilter(LowPass):
 			P = 0.0
 		return P 
 
-	def filter(self,valNow,R=3.5):
-		super(NonLinearFilter,self).update(valNow)
+	def update_filter(self,valNow,R=3.5):
+		super(NonLinearFilter,self).update_filter(valNow)
 		P = self.__nonlinear_gain(valNow,R) #Tune R value
 		self.cons[0] = 1-P
 
@@ -114,13 +135,12 @@ class NonLinearFilter(LowPass):
 		
 #### EXAMPLE USAGE ####
 if __name__=="__main__":
-	lowpassFilter = LinearFilter(5,[0.292885,0.,1,2.6132,1])	#Create a 2nd order filter and define gains
-							#...index 0 is weighting on the most recent value
-	#lowpassFilter.set_constants([0.25,0.75])		# You can also set the gains like this	
-	#lowpassFilter.set_constants([0.01,0.01,0.01,0.97])	#Setting gains for a 4th order filter
-								#...MAKE SURE YOU ACTUALLY CREATE A 4th order one before this
-
-	NLlowpassFilter = NonLinearFilter(4.0)
+	# y[n] = 1/a0 * (sum{bi*x[n-i] - sum{aj*y[n-j])
+	# LinearFilter([b0, b1z^-1,..., bN z^-N],[a0, a1z^-1,...aM z^-M],DC)
+	# DC GAIN: https://dsp.stackexchange.com/questions/11411/gain-of-fir-iir-filters
+	lowpassFilter = LinearFilter(0.05,[1,-0.95]) # Simple First order filter			
+	#lowpassFilter = LinearFilter([1, 3, 3, 1],[1 ,-2.0286, 1.4762, -0.3714],1.0/9.0)	#Butterworth 3rd order
+	#NLlowpassFilter = NonLinearFilter(4.0)
 
 	#### CREATE SINE WAVE WITH NORMALLY DISTRIBUTED NOISE	
 	t = np.linspace(0,2*np.pi,1000)
@@ -128,19 +148,17 @@ if __name__=="__main__":
 	noise = np.random.normal(0,0.15,1000)
 	yn = y+noise
 	yn_filt = [0.0]*1000
-	yn_filt_nonL = [0.0]*1000
+	#yn_filt_nonL = [0.0]*1000
 	for i in range(1000):
-		yn_filt[i] = lowpassFilter.filter(yn[i])
-		yn_filt_nonL[i] = NLlowpassFilter.filter(yn[i],3.5)
+		yn_filt[i] = lowpassFilter.update_filter(yn[i])
+		#yn_filt_nonL[i] = NLlowpassFilter.filter(yn[i],3.5)
 
 
-	g = lowpassFilter.return_constants()	
-	print g
 	plt.figure
 	plt.plot(t,y)
 	plt.plot(t,yn)	
 	plt.plot(t,yn_filt)
-	plt.plot(t,yn_filt_nonL)
+	#plt.plot(t,yn_filt_nonL)
 	plt.legend(['y','yn','yn_filt','yn_filt_nonL'])
 	plt.show()
 

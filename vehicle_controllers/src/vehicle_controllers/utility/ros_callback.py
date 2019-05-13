@@ -31,12 +31,11 @@ class RosCallbackDefine:
 			self.steeringMsg.command = steering
 			self.steeringMsg.rotation_rate = 2	# 2 is slow	
 		#### OVERRIDE AND CLEAR FAULTS ONCE
+                self.steeringMsg.clear_override = False
+                self.steeringMsg.clear_faults = False
 		if self.enabled_flag_lat == False: 	
-			self.throttleMsg.clear_override = True
-			self.throttleMsg.clear_faults = True
-			
-			self.brakeMsg.clear_override = True
-			self.brakeMsg.clear_faults = True
+			self.steeringMsg.clear_override = True
+			self.steeringMsg.clear_faults = True
 			self.enabled_flag_lat = True
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	
@@ -50,6 +49,11 @@ class RosCallbackDefine:
 			self.brakeMsg.command = brake	
 		#### PUBLISH MESSAGES		
 		#### OVERRIDE WHEN GOES TO TRUE ONCE
+                self.throttleMsg.clear_override = False
+                self.throttleMsg.clear_faults = False
+                self.brakeMsg.clear_override = False
+                self.brakeMsg.clear_faults = False
+
 		if self.enabled_flag_long == False: 	
 			self.throttleMsg.clear_override = True
 			self.throttleMsg.clear_faults = True
