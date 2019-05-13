@@ -30,13 +30,16 @@ class RosCallbackDefine:
 		elif self.vehicle == self.vehList[1]:			#### POLARIS CASE ####			
 			self.steeringMsg.command = steering
 			self.steeringMsg.rotation_rate = 2	# 2 is slow	
-		#### OVERRIDE AND CLEAR FAULTS ONCE
-                self.steeringMsg.clear_override = False
-                self.steeringMsg.clear_faults = False
-		if self.enabled_flag_lat == False: 	
+		
+		if self.enabled_flag_lat == False and self.: 	
 			self.steeringMsg.clear_override = True
 			self.steeringMsg.clear_faults = True
 			self.enabled_flag_lat = True
+
+		if self.enabledFlag == True:
+			#### DONT CLEAR ONCE AUTONOMOUS IS SET
+		        self.steeringMsg.clear_override = False
+		        self.steeringMsg.clear_faults = False
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	
 		#self.pubEnable.publish(self.enableMsg)
@@ -49,10 +52,6 @@ class RosCallbackDefine:
 			self.brakeMsg.command = brake	
 		#### PUBLISH MESSAGES		
 		#### OVERRIDE WHEN GOES TO TRUE ONCE
-                self.throttleMsg.clear_override = False
-                self.throttleMsg.clear_faults = False
-                self.brakeMsg.clear_override = False
-                self.brakeMsg.clear_faults = False
 
 		if self.enabled_flag_long == False: 	
 			self.throttleMsg.clear_override = True
@@ -61,6 +60,12 @@ class RosCallbackDefine:
 			self.brakeMsg.clear_override = True
 			self.brakeMsg.clear_faults = True
 			self.enabled_flag_long = True
+
+		if self.enableFlag == True:
+                	self.throttleMsg.clear_override = False
+               		self.throttleMsg.clear_faults = False
+                	self.brakeMsg.clear_override = False
+                	self.brakeMsg.clear_faults = False
 
 		self.pubThrottle.publish(self.throttleMsg)
 		self.pubBrake.publish(self.brakeMsg)
@@ -88,9 +93,12 @@ class RosCallbackDefine:
 		self.yaw = msg.yaw #euler[2]
 		#self.linearX = msg.twist.twist.linear.x
 		#self.angularZ = msg.twist.twist.angular.z	
-		self.flag[1] = 1	
+		self.flag[1] = 1
 
-			
+	#### status indicator callback for Polaris
+	def ____systemFlag_cb(self,msg,args):
+		self.enableFlag = msg.data
+
 
 	#### MKZ ####
 	def __init_mkz(self):
@@ -147,6 +155,7 @@ class RosCallbackDefine:
 		#### LATERAL INFO ####
 		self.odomSub = rospy.Subscriber("/vehicle/odom2", customOdom2, self.__odom_cb,(VEH))
 		self.pubSteer = rospy.Publisher("/as_rx/steer_cmd",SteerSystemCmd,queue_size=1)
+		self.statusFlag = rospy.Subscriber("/as_tx/enabled",Bool,self.__systemFlag_cb(VEH))
 
 		#### ENABLE INFO ####
 		#self.pubEnable = rospy.Publisher("/as_rx/enable",Bool,queue_size=1)
@@ -159,12 +168,11 @@ class RosCallbackDefine:
 		self.throttleMsg = SystemCmdFloat()
 		self.brakeMsg = SystemCmdFloat()
 		self.steeringMsg = SteerSystemCmd()
-		#self.enableMsg = Bool()
 
 		self.throttleMsg.enable = True
 		self.brakeMsg.enable = True
 		self.steeringMsg.enable = True
-		#self.enableMsg.data = True
+		self.enableFlag = False	#Not in autonomous mode = false flag
 
 		self.throttleMsg.ignore_overrides=False
 		self.brakeMsg.ignore_overrides=False
