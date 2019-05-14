@@ -8,8 +8,8 @@ steerLim:
 # PID GAINS
 # large error throttle
 PID1:
- P: 0.015
- I: 0.004
+ P: 0.040
+ I: 0.00050
  D: 0.01
 # large error brake
 PID2:
@@ -18,7 +18,7 @@ PID2:
  D: 0.
 # small error brake
 PID3:
- P: 0.00005
+ P: 0.
  I: 0.
  D: 0.
 # Tolerance

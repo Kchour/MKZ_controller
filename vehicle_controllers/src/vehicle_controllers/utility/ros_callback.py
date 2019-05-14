@@ -29,7 +29,7 @@ class RosCallbackDefine:
 			# Publish the messages	
 		elif self.vehicle == self.vehList[1]:			#### POLARIS CASE ####			
 			self.steeringMsg.command = steering
-			self.steeringMsg.rotation_rate = 10	# 2 is slow	
+			self.steeringMsg.rotation_rate = 30.0	# 2 is slow	
 		
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	

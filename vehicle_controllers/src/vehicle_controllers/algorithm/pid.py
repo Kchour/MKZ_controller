@@ -16,6 +16,7 @@ class PID:
         self.errorPrev = self.errorNow
         self.errorNow = error
         self.errorTot += error
+	self.errorTot = self.satValues(self.errorTot,self.satLower,self.satUpper)
 
     def errorTotalReturn(self):
         return self.errorTot
@@ -42,7 +43,7 @@ class PID:
         kp = self.kp
         ki = self.ki
         kd = self.kd
-        self.errorTot = self.satValues(self.errorTot,self.satLower,self.satUpper) 
+        #self.errorTot = self.satValues(self.errorTot,self.satLower,self.satUpper) 
         #### Compute control input
         u = kp*self.errorNow + ki*self.errorTot + kd*(self.errorNow - self.errorPrev)
         return u

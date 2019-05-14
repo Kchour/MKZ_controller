@@ -33,7 +33,7 @@ class FunctionOnce:
 class LongController:
     def __init__(self):
 	#### INITIALIZE DESIRED VEHICLE SPEED
-	self.vx_desired = rospy.get_param('desired_speed',2.0)
+	self.vx_desired = rospy.get_param('desired_speed',4.0)
 	self.vehicle = rospy.get_param('vehicle',"POLARIS")
 	#### READ YAML FILE from script path
 	path = os.path.dirname(os.path.abspath(__file__))
@@ -58,7 +58,7 @@ class LongController:
 
         #### CREATE PID OBJECT
         PIDcontroller=PID()
-        PIDcontroller.setLims(0.0,125.0)       #### ADJUST THE UPPER LIMIT BASED ON EXPERIMENTATION
+        PIDcontroller.setLims(0.0,1000.)       #### ADJUST THE UPPER LIMIT BASED ON EXPERIMENTATION
 	#### CREATE FILTER OBJECTS
 	#linearX_prev = 0.0
 	#throttle_cmd_prev, brake_cmd_prev = 0.0, 0.0
@@ -72,7 +72,7 @@ class LongController:
 	topic_helper = RosCallbackDefine(self.vehicle) 
 
         #### PUBLISH LOOP and Additional parameters
-        rate = rospy.Rate(30)
+        rate = rospy.Rate(15)
      
 
         while not rospy.is_shutdown():
@@ -95,18 +95,19 @@ class LongController:
 			PIDcontroller.update(vxError)
 
 			#### Gain scheduling for different regions of error
-			if vxError >= 0:
-			    if abs(vxError) >= errTol:
-				smallErrorFlag.set_flag(False)
-				PIDcontroller.setGains(P1,I1,D1)
-			    else:
-				if ~smallErrorFlag.return_flag():
-					totError = PIDcontroller.errorTotalReturn()
-					Ki = u/(vxError*totError)
-					smallErrorFlag.set_flag(True)
-					print "SMALL ERORR THROTTLE"
-				PIDcontroller.setGains(vxError,Ki*vxError**4,0.)
-				
+			if vxError >= -1.0:
+			    #if abs(vxError) >= errTol:
+			    #    smallErrorFlag.set_flag(False)
+			    #    PIDcontroller.setGains(P1,I1,D1)
+			    #else:
+			    #    if ~smallErrorFlag.return_flag():
+			    #    	totError = PIDcontroller.errorTotalReturn()
+			    #    	Ki = u/(vxError*totError)
+			    #    	smallErrorFlag.set_flag(True)
+			    #    	print "SMALL ERORR THROTTLE"
+			    #    PIDcontroller.setGains(vxError,Ki*vxError**4,0.)
+			    #    
+			    PIDcontroller.setGains(P1*vxError,I1,D1*vxError)
 			    u = PIDcontroller.computeControl()      # Compute Control input
 			    u = self.satValues(u,0.0,1.0)           # Bound control input
 			    #throttle_cmd = u               # set throttle
