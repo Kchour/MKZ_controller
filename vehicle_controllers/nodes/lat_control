@@ -29,7 +29,13 @@ class LatController:
 	steeringRatio = data_loaded['steeringRatio']
 	steerLim_upper = data_loaded['steerLim']['upper']
 	steerLim_lower = data_loaded['steerLim']['lower']
-
+	#### PARAMETERS FOR ADAPTIVE VELOCITY AND LOOKAHEAD	
+	lMin = data_loaded['Adaptive']['lMin']
+	lMax = data_loaded['Adaptive']['lMax']
+	vMin = data_loaded['Adaptive']['vMin']
+	vMax = data_loaded['Adaptive']['vMax']
+	gamma = data_loaded['Adaptive']['gamma']
+	ayLim = data_loaded['Adaptive']['ayLim']
 	#### CREATE SteeringFeedForward Object. Pass in the waypoints
 	steeringFF = SteeringMethods(wpfile,lookAhead,wheelBase,steeringRatio)	#Using default mkz values, otherwise specify them: lookAhead = 10.0, wheelBase = 2.85, steeringRatio = 14.8
 	topic_helper = RosCallbackDefine(vehicle)		
@@ -42,13 +48,21 @@ class LatController:
 		states = topic_helper.return_states()
 		if len(states) > 1:
 			linearX = states[0]
-			pose_x = states[1]
-			pose_y = states[2]
+			poseX = states[1]
+			poseY = states[2]
 			yaw = states[3]
-			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(pose_x,pose_y,yaw)		# Calculate steering 
-			
+			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(poseX,poseY,yaw)		# Calculate steering 
+
+			# set variable lookahead
+			steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
+			# set variable speed
+    			vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
+			# limit the steering angle
 			steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
-			topic_helper.publish_vehicle_lat(steercmd)									# Publish the steering cmd	
+			# Publish the steering cmd
+			topic_helper.publish_vehicle_lat(steercmd)			
+			# Publish the desired velocity			
+			topic_helper.setDesiredVelocity(vCmd)
 		rate.sleep()
 
 

@@ -23,5 +23,12 @@ PID3:
  D: 0.
 # Tolerance
 Tol: 0.5
+Adaptive:
+ lMin: 5.
+ lMax: 15.
+ vMin: 3
+ vMax: 8
+ gamma: 0.75
+ ayLim: 0.5
 
 

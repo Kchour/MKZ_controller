@@ -33,8 +33,8 @@ class FunctionOnce:
 class LongController:
     def __init__(self):
 	#### INITIALIZE DESIRED VEHICLE SPEED
-	self.vx_desired = rospy.get_param('desired_speed',4.0)
-	self.vehicle = rospy.get_param('vehicle',"POLARIS")
+	self.vx_desired = rospy.get_param("~desired_speed",4.0)
+	self.vehicle = rospy.get_param('~vehicle',"POLARIS")
 	#### READ YAML FILE from script path
 	path = os.path.dirname(os.path.abspath(__file__))
 	with open(path+"/../config/polaris_values.yaml",'r') as stream:

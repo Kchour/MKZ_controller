@@ -60,7 +60,22 @@ class SteeringMethods:
 	self.flag = 1
 
     #------------------------------
-    #### Path Following Algorithms   
+    #### Path Following Algorithms 
+
+    # This is used as utility functions for methodPurePursuit
+    def methodAdaptiveLookAhead(self, lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv):
+	self.LA = (lMax - lMin) * np.exp(-gamma * linearX**2*abs(curv)) + lMin
+
+    def methodAdaptiveVelocity(self,vMin, vMax, ayLim, curv):
+	vCmd = 0.85 * np.sqrt(ayLim/(abs(curv)+0.00005))
+	if vCmd >= vMax:
+		return vMax
+	elif vCmd <= vMin:
+		return vMin
+	else:
+		return vCmd
+
+	
     def methodPurePursuit(self,pose_x,pose_y,yaw):
  	wheelBase = self.WB	
 	lookAhead = self.LA

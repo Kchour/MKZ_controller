@@ -1,7 +1,7 @@
 # Polaris Parameters
 lookAhead: 10.0
-wheelBase: 2.4
-steeringRatio: 12.0
+wheelBase: 2.93
+steeringRatio: 16.0
 steerLim:
  lower: -7.5
  upper: 7.5
@@ -23,5 +23,11 @@ PID3:
  D: 0.
 # Tolerance
 Tol: 0.1
-
+Adaptive:
+ lMin: 5.
+ lMax: 15.
+ vMin: 3
+ vMax: 8
+ gamma: 0.75
+ ayLim: 0.5
 

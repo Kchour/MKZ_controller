@@ -73,6 +73,11 @@ class RosCallbackDefine:
 		#self.angularZ = msg.twist.twist.angular.z	
 		self.flag[1] = 1
 
+	def setDesiredVelocity(self, vCmd):
+		self.setVelMsg.data = vCmd
+		self.setVelPub.publish(self.setVelMsg)
+		
+
 	#### status indicator callback for Polaris
 	def __systemFlag_cb(self,msg,args):
 		self.enabledFlag = msg.data
@@ -153,7 +158,8 @@ class RosCallbackDefine:
 		self.throttleMsg = SystemCmdFloat()
 		self.brakeMsg = SystemCmdFloat()
 		self.steeringMsg = SteerSystemCmd()
-		self.speedMsg = Float64()	
+		self.speedMsg = Float64()
+		self.setVelMsg = Float64()	
 
 		self.throttleMsg.enable = True
 		self.brakeMsg.enable = True
@@ -177,6 +183,9 @@ class RosCallbackDefine:
 
 		#### ENABLE INFO ####
 		self.pubSpeed = rospy.Publisher("/vectornav/velTEST",Float64,queue_size=1)
+
+		### Adjusting Desired Velocity
+		self.setVelPub = rospy.Publisher("/long_controller/cmd_vel",Float64, queue_size=1)
 
 
 		
