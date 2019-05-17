@@ -1,6 +1,6 @@
 # Polaris Parameters
 lookAhead: 10.0
-wheelBase: 2.93
+wheelBase: 2.87
 steeringRatio: 16.0
 steerLim:
  lower: -7.5
@@ -8,9 +8,9 @@ steerLim:
 # PID GAINS
 # large error throttle
 PID1:
- P: 0.040
- I: 0.00050
- D: 0.01
+ P: 0.024
+ I: 0.0010
+ D: 0.002
 # large error brake
 PID2:
  P: 0.0001
@@ -27,7 +27,7 @@ Adaptive:
  lMin: 5.
  lMax: 15.
  vMin: 3
- vMax: 8
+ vMax: 6
  gamma: 0.75
  ayLim: 0.5
 

@@ -65,6 +65,7 @@ class SteeringMethods:
     # This is used as utility functions for methodPurePursuit
     def methodAdaptiveLookAhead(self, lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv):
 	self.LA = (lMax - lMin) * np.exp(-gamma * linearX**2*abs(curv)) + lMin
+	print "Adaptive Lookahead: ", self.LA
 
     def methodAdaptiveVelocity(self,vMin, vMax, ayLim, curv):
 	vCmd = 0.85 * np.sqrt(ayLim/(abs(curv)+0.00005))
@@ -80,6 +81,7 @@ class SteeringMethods:
  	wheelBase = self.WB	
 	lookAhead = self.LA
 	steeringRatio = self.SR
+	print lookAhead
 	#### Find closest waypoint 
 	diff = self.pathArray - np.array([pose_x,pose_y])
 	diffSq = diff[:,0]**2 + diff[:,1]**2
