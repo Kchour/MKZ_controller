@@ -35,7 +35,7 @@ class SteeringMethods:
         else:
             return value
 
-    def readText(self,filename = 'circlefixed_example.dat'):
+    def readText(self,filename = 'circlefixedutm_example.dat'):
 	txt  = np.loadtxt(filename,delimiter=',')
 	return txt
 

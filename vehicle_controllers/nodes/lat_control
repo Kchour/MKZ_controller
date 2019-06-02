@@ -18,11 +18,10 @@ import os
 class LatController:
    def __init__(self):
 	path = os.path.dirname(os.path.abspath(__file__))
-	wpfile = rospy.get_param('waypoints_file',path+"/odom_waypoints.dat")
-	vehicle = rospy.get_param("vehicle","POLARIS")
-	#### READ YAML FILE
-	
-	with open(path+"/../config/polaris_values.yaml",'r') as stream:
+	wpfile = path +'/'+ rospy.get_param("~waypoints_file","odom_waypoints.dat")
+	vehicle = rospy.get_param("~vehicle","MKZ")
+	#### READ YAML FILE	
+	with open(path+"/../config/"+vehicle+".yaml",'r') as stream:
 		data_loaded = yaml.safe_load(stream)
 	lookAhead = data_loaded['lookAhead']
 	wheelBase = data_loaded['wheelBase']
@@ -54,15 +53,16 @@ class LatController:
 			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(poseX,poseY,yaw)		# Calculate steering 
 
 			# set variable lookahead
-			steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
+			#steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
 			# set variable speed
-    			vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
+    			#vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
 			# limit the steering angle
 			steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
 			# Publish the steering cmd
 			topic_helper.publish_vehicle_lat(steercmd)			
 			# Publish the desired velocity			
-			topic_helper.setDesiredVelocity(vCmd)
+			#topic_helper.setDesiredVelocity(vCmd)
+                        print "\n SteerCmd: {} \n Curv: {}".format(steercmd, curv)
 		rate.sleep()
 
 

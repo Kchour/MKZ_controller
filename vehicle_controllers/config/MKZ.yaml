@@ -1,5 +1,5 @@
-# Polaris Parameters
-lookAhead: 10.0
+# LINCOLN MKZ Parameters
+lookAhead: 5.0
 wheelBase: 2.85
 steeringRatio: 14.8
 steerLim:
@@ -25,7 +25,7 @@ PID3:
 Tol: 0.5
 Adaptive:
  lMin: 5.
- lMax: 15.
+ lMax: 7.
  vMin: 3
  vMax: 8
  gamma: 0.75

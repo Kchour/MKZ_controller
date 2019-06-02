@@ -50,7 +50,8 @@ class MessageHandle:
             self.x = temp[0]
             self.y = temp[1]
         if args[1] == "ORIENTATION":
-            self.yaw = np.radians(msg.data)
+	    # Convert from NED to ENU
+            self.yaw = np.mod(2*np.pi + np.pi/2 - np.radians(msg.data),2*np.pi)
             q=tf.transformations.quaternion_from_euler(0.0,0.0,self.yaw)
             self.qx = q[0]
             self.qy = q[1]
@@ -90,6 +91,7 @@ class MessageHandle:
         if args[1] == "ORIENTATION":
             self.roll = np.radians(msg.RPY.x)
 	    self.pitch = np.radians(msg.RPY.y)
+            #convert from ned to enu
 	    self.yaw = np.mod(2*np.pi + np.pi/2 - np.radians(msg.RPY.z),2*np.pi)
 	
             q = tf.transformations.quaternion_from_euler(self.roll, self.pitch, self.yaw)

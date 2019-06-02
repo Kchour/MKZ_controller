@@ -117,6 +117,7 @@ class RosCallbackDefine:
 		self.throttleMsg = ThrottleCmd()
 		self.brakeMsg = BrakeCmd()
 		self.steeringMsg = SteeringCmd()
+		self.setVelMsg = Float64()	
 		
 		self.throttleMsg.enable = True
 		self.throttleMsg.pedal_cmd_type = 2
@@ -138,6 +139,8 @@ class RosCallbackDefine:
 		self.pubSteer = rospy.Publisher('/vehicle/steering_cmd',SteeringCmd,queue_size=1)		# TOPICS
 		self.subOdom = rospy.Subscriber('/vehicle/odom2',customOdom2,self.__odom_cb,(VEH))
 
+		### Adjusting Desired Velocity
+		self.setVelPub = rospy.Publisher("/long_controller/cmd_vel",Float64, queue_size=1)
 
 	#### POLARIS ####
 	def __init_polaris(self):

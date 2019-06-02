@@ -37,7 +37,7 @@ class LongController:
 	self.vehicle = rospy.get_param('~vehicle',"POLARIS")
 	#### READ YAML FILE from script path
 	path = os.path.dirname(os.path.abspath(__file__))
-	with open(path+"/../config/polaris_values.yaml",'r') as stream:
+	with open(path+"/../config/"+self.vehicle+".yaml",'r') as stream:
 		data_loaded = yaml.safe_load(stream)
 	#### large error throttle
 	P1 = data_loaded['PID1']['P']
@@ -133,7 +133,7 @@ class LongController:
 			#### PUBLISH THE MESSAGES
 			topic_helper.publish_vehicle_long(throttle_cmd,brake_cmd)
 			#### PRINT MESSAGES FOR DEBUG
-			print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,linearX,throttle_cmd,brake_cmd,PIDcontroller.errorTotalReturn())
+			#print "\n speed cmd: {} \n speed: {} \n throttle: {} \n brake: {} \n totalError: {}".format(self.vx_desired,linearX,throttle_cmd,brake_cmd,PIDcontroller.errorTotalReturn())
                 rate.sleep()
 
 

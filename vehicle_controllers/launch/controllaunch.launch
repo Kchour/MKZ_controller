@@ -1,18 +1,32 @@
 <?xml version="1.0"?>
 <launch>
-	
+
+	<!-- Collecting waypoints -->	
 	<arg name="IS_CP" default="false"/>
-	<arg name="DESIRED_SPEED" default="4.0"/>
-	<!--arg name="WAYPOINTS_FILE" default="circlefixed_example.dat"/-->
-	<arg name="WAYPOINTS_FILE" default="odom_waypoints.dat"/>
+
+	<!-- Desired forward speed-->
+	<arg name="DESIRED_SPEED" default="5.0"/>
+
+	<!--circlefixed_example.dat is a circle of radius 20m for mkz sim -->
+	<!--odom_waypoints.dat or circlefixedutm_example.dat -->
+	<arg name="WAYPOINTS_FILE" default="circlefixedutm_example.dat"/>
+
+	<!--SELECT VEHICLE HERE: POLARIS, MKZ -->
+	<arg name="VEHICLE" default="MKZ"/>
 	<!--param name="location" value="$(find vehicle_controllers)"/-->
 
+	<!-- ODOMPUBTEST CASE: MKZSIM, MKZREAL, POLARIS -->
+	<arg name="ODOMPUB" default="MKZSIM"/>
+
 	<group unless="$(arg IS_CP)">
+		<node pkg="vehicle_controllers" type="odompubtest" name="odom_publisher_node" args="$(arg ODOMPUB)"/>
 		<node pkg="vehicle_controllers" type="long_control" name="long_control_node" output="screen">
 			<param name="desired_speed" value="$(arg DESIRED_SPEED)"/>
+			<param name="vehicle" value="$(arg VEHICLE)"/>
 		</node>
-		<node pkg="vehicle_controllers" type="lat_control" name="lat_control_node" cwd="node">
+		<node pkg="vehicle_controllers" type="lat_control" name="lat_control_node" cwd="node" output="screen">
 			<param name="waypoints_file" value="$(arg WAYPOINTS_FILE)"/>
+			<param name="vehicle" value="$(arg VEHICLE)"/>
 		</node>
 	</group>
 
