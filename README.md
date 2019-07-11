@@ -50,6 +50,7 @@ The following messages are required (either build from source or install them)
 # To Run the Simulator
 1. Install ROS Kinetic with Ubuntu 16.04
 1. Install dbw_mkz_simulator from dataspeed inc.: https://bitbucket.org/DataspeedInc/dbw_mkz_simulation (use the deprecated version)
+1. python -m pip install --user utm
 # To build and run
 1. Download packages to your workspace at: ~/yourcatkin_ws/src
 1. catkin_make or catkin build
@@ -109,9 +110,18 @@ Dont forget to source your setup.bash from ~/catkin_ws/devel/
 source ~/catkin_ws/devel/setup.bash
 
 ```
+
+# Useful Links
+| Function | Link |
+| ------ | ------ |
+| IEA packages | https://github.tamu.edu/AutonomyLab01/IEA01/tree/kenny2 |
+| vehicle controller/simulator | https://github.tamu.edu/ckennyc/Mkz_Simulator/tree/controllers |
+| sensor packages | https://github.tamu.edu/ckennyc/Lincoln-Sensor-Packages/tree/lincoln_ws_iea51 |
+
 # TODO
 1. Add more states returned to odom1,2 topics
 1. Implement EKF/UKF (actual sensor fusion)
 1. Waypoint planner and array topic that grows
 1. Ros moveit?
+1. Start changelog
 
