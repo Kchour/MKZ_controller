@@ -5,18 +5,18 @@
 	<arg name="IS_CP" default="false"/>
 
 	<!-- Desired forward speed-->
-	<arg name="DESIRED_SPEED" default="5.0"/>
+	<arg name="DESIRED_SPEED" default="3.0"/>
 
 	<!--circlefixed_example.dat is a circle of radius 20m for mkz sim -->
 	<!--odom_waypoints.dat or circlefixedutm_example.dat -->
-	<arg name="WAYPOINTS_FILE" default="circlefixedutm_example.dat"/>
+	<arg name="WAYPOINTS_FILE" default="odom_waypoints.dat"/>
 
 	<!--SELECT VEHICLE HERE: POLARIS, MKZ -->
-	<arg name="VEHICLE" default="MKZ"/>
+	<arg name="VEHICLE" default="POLARIS"/>
 	<!--param name="location" value="$(find vehicle_controllers)"/-->
 
 	<!-- ODOMPUBTEST CASE: MKZSIM, MKZREAL, POLARIS -->
-	<arg name="ODOMPUB" default="MKZSIM"/>
+	<arg name="ODOMPUB" default="POLARIS"/>
 
 	<group unless="$(arg IS_CP)">
 		<node pkg="vehicle_controllers" type="odompubtest" name="odom_publisher_node" args="$(arg ODOMPUB)"/>
@@ -31,6 +31,7 @@
 	</group>
 
 	<group if="$(arg IS_CP)">
+		<node pkg="vehicle_controllers" type="odompubtest" name="odom_publisher_node" args="$(arg ODOMPUB)"/>
 		<node pkg="vehicle_controllers" type="collect_waypoints" name="waypoint_collection_node" output="screen">
 			<param name="waypoints_file" value="$(arg WAYPOINTS_FILE)"/>
 		</node>	

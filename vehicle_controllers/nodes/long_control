@@ -33,7 +33,7 @@ class FunctionOnce:
 class LongController:
     def __init__(self):
 	#### INITIALIZE DESIRED VEHICLE SPEED
-	self.vx_desired = rospy.get_param("~desired_speed",4.0)
+	self.vx_desired = rospy.get_param("~desired_speed",2.5)
 	self.vehicle = rospy.get_param('~vehicle',"POLARIS")
 	#### READ YAML FILE from script path
 	path = os.path.dirname(os.path.abspath(__file__))

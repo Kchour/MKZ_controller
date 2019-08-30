@@ -4,6 +4,11 @@ import rospy
 import tf
 import pdb
 import numpy as np
+from threading import Thread, Lock
+wpmutex = Lock()
+
+global timeBefore
+timeBefore = 0.0
 
 class RosCallbackDefine:
 	def __init__(self,vehicle):
@@ -21,15 +26,28 @@ class RosCallbackDefine:
 			return [self.linearX, self.pose_x, self.pose_y, self.yaw]
 		else:
 			return [0]
-
+        def return_waypoints(self):
+		global timeBefore                
+		wpmutex.acquire()
+		#timeNow = rospy.get_time()
+		#if timeNow - timeBefore > 2:
+                #        print "RETURNING WAYPOINTS NOW"
+                #	self.return_waypoints_temp = list(self.waypoints)
+		#	timeBefore = rospy.get_time()
+                self.return_waypoints_temp = list(self.waypoints)
+                wpmutex.release()
+                if len(self.return_waypoints_temp) > 0:
+                    return np.array(self.return_waypoints_temp)
+                else:
+                    return [0]
 	def publish_vehicle_lat(self,steering):
 		if self.vehicle == self.vehList[0]:			#### MKZ CASE ####
 			# Assign the values passed
-			self.steeringMsg.steering_wheel_angle_cmd = steering
+                        self.steeringMsg.steering_wheel_angle_cmd = steering
 			# Publish the messages	
 		elif self.vehicle == self.vehList[1]:			#### POLARIS CASE ####			
 			self.steeringMsg.command = steering
-			self.steeringMsg.rotation_rate = 30.0	# 2 is slow	
+			self.steeringMsg.rotation_rate = 10.0	# 2 is slow, #30.0 is quite fast	
 		
 		#### PUBLISH MESSAGES		
 		self.pubSteer.publish(self.steeringMsg)	
@@ -56,7 +74,9 @@ class RosCallbackDefine:
 			self.flag[0] = 1
 		elif args[0:] == self.vehList[1]:	#### POLARIS CASE ####
 			#self.linearX = msg.data		#### /as_tx/vehicle_speed 
-			self.linearX=np.sqrt(msg.NedVel.x**2 + msg.NedVel.y**2)
+			# TODO we may need to change linearX to some other variable once odom_filtered topic is known
+                        #print "We may need to change linearX to warn some other variable once odom_filtered topic is known"
+                        self.linearX=np.sqrt(msg.NedVel.x**2 + msg.NedVel.y**2)
 			self.speedMsg.data = self.linearX		
 			self.pubSpeed.publish(self.speedMsg) 
 			self.flag[0] = 1
@@ -72,6 +92,27 @@ class RosCallbackDefine:
 		#self.linearX = msg.twist.twist.linear.x
 		#self.angularZ = msg.twist.twist.angular.z	
 		self.flag[1] = 1
+
+        def __odom_cb_filtered(self,msg):
+                self.pose_x = msg.pose.pose.position.x
+                self.pose_y = msg.pose.pose.position.y
+                quat = msg.pose.pose.orientation
+                euler = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
+                self.roll = euler[0]
+                self.pitch = euler[1]
+                self.yaw = euler[2]
+                # odometry not using it atm
+                #self.linearX = msg.twist.twist.linear.x
+                self.angularZ = msg.twist.twist.angular.z
+                self.flag[1] = 1
+
+        def __waypoints_cb(self,msg):
+                wpmutex.acquire()
+                self.waypoints = []
+                for i in range(len(msg.poses)):
+                    poses_ind = msg.poses[i].pose.position
+                    self.waypoints.append([poses_ind.x, poses_ind.y])
+                wpmutex.release()
 
 	def setDesiredVelocity(self, vCmd):
 		self.setVelMsg.data = vCmd
@@ -111,8 +152,6 @@ class RosCallbackDefine:
 		from sensor_msgs.msg import NavSatFix
 		from vehicle_controllers.msg import customOdom2
 
-
-		
 		#### CREATE PUBLISHING MESSAGES 
 		self.throttleMsg = ThrottleCmd()
 		self.brakeMsg = BrakeCmd()
@@ -150,6 +189,9 @@ class RosCallbackDefine:
 		from vehicle_controllers.msg import customOdom2
 		from std_msgs.msg import Bool
 		from vn300.msg import ins
+                from nav_msgs.msg import Path
+                from nav_msgs.msg import Odometry
+                
 		# VEHICLE NAME #
 		VEH = self.vehList[1]	# "POLARIS"
 
@@ -168,11 +210,11 @@ class RosCallbackDefine:
 		self.brakeMsg.enable = True
 		self.steeringMsg.enable = True
 		self.enabledFlag = False	#Not in autonomous mode = false flag
-
 		self.throttleMsg.ignore_overrides=False
 		self.brakeMsg.ignore_overrides=False
 		self.steeringMsg.ignore_overrides=False
-
+                self.waypoints = []
+                self.return_waypoints_temp = []
 		#### LONGITUDINAL INFO ####
 		#self.subSpeed = rospy.Subscriber("/as_tx/vehicle_speed",Float64, self.__speed_cb,(VEH))
 		self.subSpeed = rospy.Subscriber("/vectornav/ins",ins, self.__speed_cb,(VEH))
@@ -181,8 +223,11 @@ class RosCallbackDefine:
 		
 		#### LATERAL INFO ####
 		self.odomSub = rospy.Subscriber("/vehicle/odom2", customOdom2, self.__odom_cb,(VEH))
-		self.pubSteer = rospy.Publisher("/as_rx/steer_cmd",SteerSystemCmd,queue_size=1)
+		self.odomSubFilt = rospy.Subscriber("/odometry/filtered", Odometry,self.__odom_cb_filtered)
+                self.pubSteer = rospy.Publisher("/as_rx/steer_cmd",SteerSystemCmd,queue_size=1)
 		self.statusFlag = rospy.Subscriber("/as_tx/enabled",Bool,self.__systemFlag_cb,(VEH))
+                #self.waypointsSub = rospy.Subscriber("/local_planning/path/a_star_path", Path,self.__waypoints_cb)
+                #self.waypointsSub = rospy.Subscriber("/local_planning/path/trajectory_path", Path,self.__waypoints_cb)
 
 		#### ENABLE INFO ####
 		self.pubSpeed = rospy.Publisher("/vectornav/velTEST",Float64,queue_size=1)

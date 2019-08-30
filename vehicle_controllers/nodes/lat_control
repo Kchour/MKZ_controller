@@ -50,19 +50,39 @@ class LatController:
 			poseX = states[1]
 			poseY = states[2]
 			yaw = states[3]
-			steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(poseX,poseY,yaw)		# Calculate steering 
+                        #dont update waypoints if you want to read from file TODO
+                        #wps = topic_helper.return_waypoints()
+                        ##print len(wps)
+                        #if len(wps)> 1:
+                        #    steeringFF.updateWayPoints(wps)
+                        #    steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(poseX,poseY,yaw)		# Calculate steering 
 
-			# set variable lookahead
-			#steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
-			# set variable speed
-    			#vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
-			# limit the steering angle
-			steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
-			# Publish the steering cmd
-			topic_helper.publish_vehicle_lat(steercmd)			
-			# Publish the desired velocity			
-			#topic_helper.setDesiredVelocity(vCmd)
-                        print "\n SteerCmd: {} \n Curv: {}".format(steercmd, curv)
+                        #    # set variable lookahead
+                        #    #steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
+                        #    # set variable speed
+                        #    vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
+                        #    # limit the steering angle
+                        #    steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
+                        #    # Publish the steering cmd
+                        #    topic_helper.publish_vehicle_lat(steercmd)			
+                        #    # Publish the desired velocity			
+                        #    #topic_helper.setDesiredVelocity(vCmd)
+                        #    #print "\n SteerCmd: {} \n Curv: {}".format(steercmd, curv)
+
+
+                        steercmd, curv, absoluteBearing, relativeBearing, targetPoint = steeringFF.methodPurePursuit(poseX,poseY,yaw)		# Calculate steering 
+
+                        # set variable lookahead
+                        steeringFF.methodAdaptiveLookAhead(lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv)
+                        # set variable speed
+                        vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
+                        # limit the steering angle
+                        steercmd_f = self.sat_limit(steercmd,steerLim_lower,steerLim_upper)
+                        # Publish the steering cmd
+                        topic_helper.publish_vehicle_lat(steercmd)			
+                        # Publish the desired velocity			
+                        #topic_helper.setDesiredVelocity(vCmd)
+                        #print "\n SteerCmd: {} \n Curv: {}".format(steercmd, curv)
 		rate.sleep()
 
 

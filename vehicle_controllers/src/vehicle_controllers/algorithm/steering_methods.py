@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import numpy as np
 import pdb
+from threading import Lock, Thread
+wpmutex = Lock()
+
 
 #### TO CHANGE ROS WORKING DIRECTORY
 #### export ROS_HOME=$HOME 
@@ -64,7 +67,8 @@ class SteeringMethods:
 
     # This is used as utility functions for methodPurePursuit
     def methodAdaptiveLookAhead(self, lMin, lMax, gamma, poseX, poseY, yaw, linearX, curv):
-	self.LA = (lMax - lMin) * np.exp(-gamma * linearX**2*abs(curv)) + lMin
+	#self.LA = (lMax - lMin) * np.exp(-gamma * linearX**2*abs(curv)) + lMin
+        self.LA = linearX + 1
 	print "Adaptive Lookahead: ", self.LA
 
     def methodAdaptiveVelocity(self,vMin, vMax, ayLim, curv):
@@ -75,10 +79,15 @@ class SteeringMethods:
 		return vMin
 	else:
 		return vCmd
+    
+    def updateWayPoints(self,new_array):
+        wpmutex.acquire()
+        self.pathArray = new_array
+	wpmutex.release()
 
-	
     def methodPurePursuit(self,pose_x,pose_y,yaw):
- 	wheelBase = self.WB	
+        wpmutex.acquire()
+        wheelBase = self.WB	
 	lookAhead = self.LA
 	steeringRatio = self.SR
 	print lookAhead
@@ -109,6 +118,7 @@ class SteeringMethods:
 
 	#### Compute desired curvature
 	curv = 2*np.sin(relativeBearing)/distList[targetPoint]
+        wpmutex.release()
 
 	#### Compute steering command (ackermann geometry)
 	steercmd = steeringRatio*np.arctan2(wheelBase*curv,1)
